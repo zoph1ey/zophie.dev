@@ -21,14 +21,6 @@ export default function Home() {
 
       {/* Main Content */}
       <div className="relative z-10 flex flex-col items-center justify-center min-h-screen p-8">
-        {/* Title */}
-        <h1 className="text-6xl md:text-8xl font-bold text-blue-900 mb-4">
-          nurfarahana
-        </h1>
-        <p className="text-xl md:text-2xl text-blue-700 mb-16">
-          Welcome to my portfolio
-        </p>
-
         {/* Character Navigation */}
         <div className="flex gap-16 items-center">
           {/* Cat Character */}
