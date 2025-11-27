@@ -3,88 +3,249 @@
 import { useEffect } from 'react';
 import { bayerMatrix } from './constants';
 
-const SCALE = 2;
+const SCALE = 2.5;
 
-const coralColors = [
-  { dark: [0, 128, 0], light: [144, 238, 144] },
-  { dark: [0, 100, 80], light: [100, 200, 150] },
-  { dark: [34, 139, 34], light: [152, 251, 152] },
-  { dark: [255, 105, 180], light: [255, 182, 203] },
-  { dark: [255, 127, 80], light: [255, 200, 160] },
-  { dark: [148, 0, 211], light: [221, 160, 221] },
-  { dark: [0, 139, 139], light: [175, 238, 238] },
-  { dark: [220, 20, 60], light: [255, 160, 180] },
-];
-
-// Better fish sprite (16x10 pixels) - more fish-like shape!
-// 0 = transparent, 1 = body, 2 = stripe, 3 = eye white, 4 = pupil, 5 = fin, 6 = belly
+// Detailed fish sprite (18x16 pixels) matching reference
+// 0 = transparent
+// 1 = body main
+// 2 = body dark
+// 3 = body light
+// 4 = eye white
+// 5 = eye pupil
 const fishSprite = [
-  [0, 0, 0, 0, 0, 0, 5, 5, 1, 1, 1, 0, 0, 0, 0, 0],
-  [0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0],
-  [0, 5, 5, 0, 1, 1, 2, 2, 1, 1, 1, 1, 1, 1, 0, 0],
-  [5, 5, 5, 1, 1, 2, 2, 1, 1, 1, 3, 4, 1, 1, 1, 0],
-  [0, 5, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-  [0, 5, 1, 1, 6, 6, 6, 6, 6, 6, 6, 1, 1, 1, 1, 1],
-  [5, 5, 5, 1, 1, 2, 2, 1, 6, 6, 6, 1, 1, 1, 0, 0],
-  [0, 5, 5, 0, 1, 1, 2, 2, 1, 1, 1, 1, 1, 0, 0, 0],
-  [0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0],
-  [0, 0, 0, 0, 0, 0, 5, 5, 1, 1, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 2, 0, 0, 2, 1, 1, 2, 0, 0, 0, 0, 0],
+  [0, 0, 0, 2, 0, 0, 0, 0, 0, 2, 1, 1, 1, 2, 0, 0, 0, 0],
+  [0, 0, 0, 2, 2, 0, 0, 0, 2, 1, 2, 2, 2, 1, 2, 0, 0, 0],
+  [0, 0, 0, 2, 1, 2, 0, 2, 1, 1, 1, 1, 1, 1, 3, 2, 2, 0],
+  [0, 0, 0, 0, 2, 1, 2, 1, 3, 3, 3, 3, 3, 3, 5, 4, 3, 2],
+  [0, 0, 0, 0, 2, 1, 1, 3, 3, 3, 3, 3, 1, 3, 5, 5, 3, 2],
+  [0, 0, 0, 0, 2, 1, 2, 1, 3, 3, 3, 3, 1, 3, 3, 3, 3, 2],
+  [0, 0, 0, 2, 1, 2, 0, 2, 1, 1, 1, 1, 1, 1, 3, 2, 2, 0],
+  [0, 0, 0, 2, 2, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0],
+  [0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 2, 1, 1, 2, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 ];
 
-// Fish color palettes [body, stripe, eyeWhite, pupil, fin, belly]
+const seaweedSprite = [
+  [0, 0, 1, 2, 0],
+  [0, 1, 2, 3, 0],
+  [0, 1, 2, 0, 0],
+  [1, 2, 3, 0, 0],
+  [1, 2, 0, 0, 0],
+  [1, 2, 3, 0, 0],
+  [0, 1, 2, 0, 0],
+  [0, 1, 2, 3, 0],
+  [0, 0, 1, 2, 0],
+  [0, 1, 2, 3, 0],
+  [0, 1, 2, 0, 0],
+  [1, 2, 0, 0, 0],
+  [1, 2, 3, 0, 0],
+  [0, 1, 2, 0, 0],
+  [0, 1, 2, 3, 0],
+  [0, 0, 1, 2, 0],
+  [0, 1, 2, 3, 0],
+  [0, 1, 2, 0, 0],
+  [1, 2, 0, 0, 0],
+  [1, 2, 3, 0, 0],
+  [0, 1, 2, 0, 0],
+  [0, 1, 2, 3, 0],
+  [0, 0, 1, 2, 0],
+  [0, 1, 2, 3, 0],
+  [0, 1, 2, 0, 0],
+  [1, 2, 0, 0, 0],
+  [1, 2, 3, 0, 0],
+  [0, 1, 2, 0, 0],
+  [0, 1, 2, 3, 0],
+  [0, 0, 1, 2, 0],
+  [0, 1, 2, 3, 0],
+  [0, 0, 1, 2, 0],
+];
+
+const roundCoralSprite = [
+  [0, 0, 0, 0, 2, 3, 3, 2, 0, 0, 0, 0],
+  [0, 0, 2, 3, 3, 4, 4, 3, 3, 2, 0, 0],
+  [0, 2, 3, 4, 3, 3, 3, 3, 4, 3, 2, 0],
+  [0, 2, 3, 3, 2, 3, 3, 2, 3, 3, 2, 0],
+  [1, 2, 3, 2, 3, 4, 4, 3, 2, 3, 2, 1],
+  [1, 2, 3, 3, 3, 3, 3, 3, 3, 3, 2, 1],
+  [1, 2, 2, 3, 4, 3, 3, 4, 3, 2, 2, 1],
+  [0, 1, 2, 3, 3, 4, 4, 3, 3, 2, 1, 0],
+  [0, 2, 3, 4, 3, 3, 3, 3, 4, 3, 2, 0],
+  [1, 2, 3, 3, 2, 3, 3, 2, 3, 3, 2, 1],
+  [1, 2, 3, 2, 3, 4, 4, 3, 2, 3, 2, 1],
+  [1, 2, 3, 3, 3, 3, 3, 3, 3, 3, 2, 1],
+  [1, 2, 2, 3, 4, 3, 3, 4, 3, 2, 2, 1],
+  [0, 1, 2, 3, 3, 3, 3, 3, 3, 2, 1, 0],
+  [0, 1, 2, 2, 3, 4, 4, 3, 2, 2, 1, 0],
+  [0, 0, 1, 2, 3, 3, 3, 3, 2, 1, 0, 0],
+  [0, 0, 1, 2, 2, 3, 3, 2, 2, 1, 0, 0],
+  [0, 0, 0, 1, 2, 2, 2, 2, 1, 0, 0, 0],
+  [0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0],
+];
+
+const fanCoralSprite = [
+  [0, 0, 0, 0, 0, 0, 2, 3, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 2, 3, 2, 3, 2, 3, 0, 0, 0, 0],
+  [0, 0, 0, 2, 3, 2, 1, 2, 3, 2, 3, 0, 0, 0],
+  [0, 0, 2, 3, 2, 0, 1, 2, 0, 3, 2, 3, 0, 0],
+  [0, 2, 3, 2, 0, 0, 1, 2, 0, 0, 3, 2, 3, 0],
+  [0, 3, 2, 0, 2, 3, 1, 2, 2, 3, 0, 3, 2, 0],
+  [2, 3, 0, 2, 3, 2, 1, 2, 3, 2, 3, 0, 3, 2],
+  [3, 2, 0, 3, 2, 0, 1, 2, 0, 3, 2, 0, 2, 3],
+  [0, 0, 2, 3, 0, 0, 1, 2, 0, 0, 3, 2, 0, 0],
+  [0, 2, 3, 2, 3, 0, 1, 2, 0, 2, 3, 2, 3, 0],
+  [2, 3, 0, 3, 2, 0, 1, 2, 0, 3, 2, 0, 3, 2],
+  [3, 2, 0, 0, 3, 2, 1, 2, 3, 2, 0, 0, 2, 3],
+  [0, 0, 2, 3, 0, 3, 1, 2, 2, 0, 3, 2, 0, 0],
+  [0, 2, 3, 2, 0, 0, 1, 2, 0, 0, 3, 2, 3, 0],
+  [2, 3, 0, 3, 2, 0, 1, 2, 0, 3, 2, 0, 3, 2],
+  [3, 2, 0, 2, 3, 0, 1, 2, 0, 2, 3, 0, 2, 3],
+  [0, 0, 2, 3, 2, 0, 1, 2, 0, 3, 2, 3, 0, 0],
+  [0, 0, 3, 2, 3, 0, 1, 2, 0, 2, 3, 2, 0, 0],
+  [0, 0, 0, 3, 2, 0, 1, 2, 0, 3, 2, 0, 0, 0],
+  [0, 0, 0, 0, 3, 2, 1, 2, 3, 2, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 3, 1, 2, 2, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 1, 2, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 1, 2, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 1, 2, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0],
+];
+
+const tubeCoralSprite = [
+  [0, 0, 2, 3, 3, 2, 0, 0],
+  [0, 2, 3, 4, 4, 3, 2, 0],
+  [0, 2, 3, 3, 3, 3, 2, 0],
+  [0, 1, 2, 3, 3, 2, 1, 0],
+  [0, 1, 2, 2, 2, 2, 1, 0],
+  [0, 1, 2, 3, 3, 2, 1, 0],
+  [0, 1, 2, 2, 2, 2, 1, 0],
+  [0, 1, 2, 3, 3, 2, 1, 0],
+  [0, 1, 2, 2, 2, 2, 1, 0],
+  [0, 1, 2, 3, 3, 2, 1, 0],
+  [0, 1, 2, 2, 2, 2, 1, 0],
+  [0, 1, 2, 3, 3, 2, 1, 0],
+  [0, 1, 2, 2, 2, 2, 1, 0],
+  [0, 1, 2, 3, 3, 2, 1, 0],
+  [0, 1, 2, 2, 2, 2, 1, 0],
+  [0, 1, 2, 3, 3, 2, 1, 0],
+  [0, 1, 2, 2, 2, 2, 1, 0],
+  [0, 1, 2, 3, 3, 2, 1, 0],
+  [0, 1, 2, 2, 2, 2, 1, 0],
+  [0, 1, 2, 3, 3, 2, 1, 0],
+  [0, 1, 2, 2, 2, 2, 1, 0],
+  [0, 1, 2, 2, 2, 2, 1, 0],
+  [0, 1, 2, 2, 2, 2, 1, 0],
+  [0, 1, 2, 2, 2, 2, 1, 0],
+  [0, 0, 1, 2, 2, 1, 0, 0],
+  [0, 0, 1, 1, 1, 1, 0, 0],
+  [0, 0, 0, 1, 1, 0, 0, 0],
+  [0, 0, 0, 1, 1, 0, 0, 0],
+];
+
+const seaweedPalettes = [
+  // Fresh mint green
+  { dark: [60, 140, 100], mid: [90, 180, 130], light: [140, 210, 170] },
+  // Soft teal green
+  { dark: [50, 130, 120], mid: [80, 170, 155], light: [130, 205, 190] },
+  // Spring green
+  { dark: [70, 145, 90], mid: [100, 185, 120], light: [150, 215, 165] },
+];
+
+const coralPalettes = [
+  // Hot pink
+  { dark: [255, 80, 130], mid: [255, 130, 170], light: [255, 180, 200], highlight: [255, 215, 230] },
+  // Bright orange
+  { dark: [255, 120, 50], mid: [255, 160, 100], light: [255, 200, 150], highlight: [255, 230, 200] },
+  // Violet purple
+  { dark: [180, 80, 220], mid: [210, 130, 255], light: [230, 175, 255], highlight: [245, 210, 255] },
+  // Cyan blue
+  { dark: [0, 200, 220], mid: [80, 230, 245], light: [150, 245, 255], highlight: [200, 255, 255] },
+  // Cherry red
+  { dark: [255, 70, 90], mid: [255, 120, 130], light: [255, 170, 175], highlight: [255, 210, 215] },
+  // Golden yellow
+  { dark: [255, 200, 0], mid: [255, 225, 80], light: [255, 240, 140], highlight: [255, 250, 190] },
+];
+
+// Fish palettes - 9 color slots per fish
+// 1=body, 2=bodyDark, 3=bodyLight, 4=eyeWhite, 5=pupil
 const fishPalettes = [
-  // Clownfish orange
-  { body: [255, 140, 0], stripe: [255, 255, 255], eyeWhite: [255, 255, 255], pupil: [0, 0, 0], fin: [255, 100, 0], belly: [255, 200, 150] },
-  // Blue tang
-  { body: [30, 100, 200], stripe: [255, 220, 0], eyeWhite: [255, 255, 255], pupil: [0, 0, 0], fin: [20, 80, 180], belly: [100, 160, 230] },
-  // Purple fish
-  { body: [138, 43, 226], stripe: [255, 200, 255], eyeWhite: [255, 255, 255], pupil: [0, 0, 0], fin: [100, 20, 180], belly: [180, 120, 255] },
-  // Cyan fish
-  { body: [0, 180, 180], stripe: [255, 255, 255], eyeWhite: [255, 255, 255], pupil: [0, 0, 0], fin: [0, 140, 140], belly: [100, 220, 220] },
-  // Pink fish
-  { body: [255, 105, 180], stripe: [255, 255, 255], eyeWhite: [255, 255, 255], pupil: [0, 0, 0], fin: [255, 80, 150], belly: [255, 180, 210] },
-  // Green fish
-  { body: [50, 180, 50], stripe: [200, 255, 200], eyeWhite: [255, 255, 255], pupil: [0, 0, 0], fin: [30, 150, 30], belly: [120, 220, 120] },
-  // Red fish
-  { body: [220, 50, 50], stripe: [255, 200, 200], eyeWhite: [255, 255, 255], pupil: [0, 0, 0], fin: [180, 30, 30], belly: [255, 130, 130] },
-  // Gold fish
-  { body: [255, 180, 50], stripe: [255, 255, 200], eyeWhite: [255, 255, 255], pupil: [0, 0, 0], fin: [255, 150, 0], belly: [255, 220, 150] },
+  // Bright Orange (clownfish vibes)
+  { body: [255, 140, 50], bodyDark: [230, 90, 20], bodyLight: [255, 200, 100], eyeWhite: [255, 255, 255], pupil: [20, 20, 40] },
+  // Hot Pink
+  { body: [255, 100, 150], bodyDark: [220, 60, 120], bodyLight: [255, 170, 200], eyeWhite: [255, 255, 255], pupil: [20, 20, 40] },
+  // Electric Cyan
+  { body: [0, 220, 220], bodyDark: [0, 160, 180], bodyLight: [100, 255, 255], eyeWhite: [255, 255, 255], pupil: [20, 20, 40] },
+  // Vivid Blue
+  { body: [60, 140, 255], bodyDark: [30, 90, 200], bodyLight: [130, 190, 255], eyeWhite: [255, 255, 255], pupil: [20, 20, 40] },
+  // Lime Green
+  { body: [180, 230, 40], bodyDark: [120, 180, 20], bodyLight: [220, 255, 100], eyeWhite: [255, 255, 255], pupil: [20, 20, 40] },
+  // Bright Purple
+  { body: [180, 80, 255], bodyDark: [130, 40, 200], bodyLight: [220, 150, 255], eyeWhite: [255, 255, 255], pupil: [20, 20, 40] },
+  // Coral Red
+  { body: [255, 90, 90], bodyDark: [220, 50, 60], bodyLight: [255, 160, 150], eyeWhite: [255, 255, 255], pupil: [20, 20, 40] },
+  // Sunny Yellow
+  { body: [255, 220, 60], bodyDark: [230, 180, 30], bodyLight: [255, 245, 140], eyeWhite: [255, 255, 255], pupil: [20, 20, 40] },
 ];
 
-const FISH_WIDTH = 16;
-const FISH_HEIGHT = 10;
+const FISH_WIDTH = 18;
+const FISH_HEIGHT = 16;
+const SEAWEED_WIDTH = 5;
+const SEAWEED_HEIGHT = 32;
+const ROUND_CORAL_WIDTH = 12;
+const ROUND_CORAL_HEIGHT = 20;
+const FAN_CORAL_WIDTH = 14;
+const FAN_CORAL_HEIGHT = 32;
+const TUBE_CORAL_WIDTH = 8;
+const TUBE_CORAL_HEIGHT = 28;
 
 function generateSeaweed(w, h) {
   const seaweed = [];
   const num = Math.floor(w / 25);
   
   for (let i = 0; i < num; i++) {
+    const size = 2.5 + Math.random() * 2.5;
     seaweed.push({
       x: (i * (w / num)) + Math.random() * 15 - 7,
       baseY: h,
-      width: 3 + Math.random() * 4,
-      height: h * 0.45 + Math.random() * (h * 0.3), // 50% taller
-      colorIndex: Math.floor(Math.random() * 3),
+      size: size,
+      paletteIndex: Math.floor(Math.random() * seaweedPalettes.length),
       phase: Math.random() * Math.PI * 2,
       speed: 0.5 + Math.random() * 0.5,
+      layer: Math.random(),
     });
   }
   return seaweed;
 }
 
-function generateStaticCorals(w, h) {
+function generateCorals(w, h) {
   const corals = [];
-  const num = Math.floor(w / 40);
+  const num = Math.floor(w / 50);
   
   for (let i = 0; i < num; i++) {
-    const type = Math.random() > 0.5 ? 'fan' : 'round';
+    const types = ['round', 'fan', 'tube'];
+    const type = types[Math.floor(Math.random() * types.length)];
+    const size = 2 + Math.random() * 2;
+    
     corals.push({
-      x: (i * (w / num)) + Math.random() * 30 - 15,
+      x: (i * (w / num)) + Math.random() * 35 - 17,
       baseY: h,
-      width: 15 + Math.random() * 20,
-      height: h * 0.225 + Math.random() * (h * 0.225), // 50% taller
       type: type,
-      colorIndex: 3 + Math.floor(Math.random() * 5),
+      size: size,
+      paletteIndex: Math.floor(Math.random() * coralPalettes.length),
+      layer: Math.random(),
     });
   }
   return corals;
@@ -95,10 +256,10 @@ function generateFish(w, h) {
   const numFish = 8 + Math.floor(Math.random() * 6);
   
   for (let i = 0; i < numFish; i++) {
-    const size = 2.25 + Math.random() * 2.25; // 50% bigger (was 1.5-3, now 2.25-4.5)
+    const size = 2 + Math.random() * 2;
     fish.push({
       x: Math.random() * w,
-      y: h * 0.1 + Math.random() * (h * 0.45), // Adjusted to not overlap with taller plants
+      y: h * 0.1 + Math.random() * (h * 0.45),
       size: size,
       speed: 0.2 + Math.random() * 0.4,
       direction: Math.random() > 0.5 ? 1 : -1,
@@ -106,48 +267,11 @@ function generateFish(w, h) {
       wobblePhase: Math.random() * Math.PI * 2,
       wobbleSpeed: 1.5 + Math.random() * 1.5,
       tailPhase: Math.random() * Math.PI * 2,
+      vx: 0,
+      vy: 0,
     });
   }
   return fish;
-}
-
-function isInsideStaticCoral(x, y, coral) {
-  const relX = x - coral.x;
-  const relY = coral.baseY - y;
-  
-  if (relY < 0 || relY > coral.height) return false;
-  if (Math.abs(relX) > coral.width) return false;
-  
-  const heightRatio = relY / coral.height;
-  
-  if (coral.type === 'fan') {
-    const spread = coral.width * heightRatio * 0.8;
-    const currentWidth = coral.width * 0.15 + spread;
-    return Math.abs(relX) < currentWidth;
-  } else {
-    const centerY = coral.height * 0.5;
-    const rx = coral.width * 0.5;
-    const ry = coral.height * 0.5;
-    const normalizedX = relX / rx;
-    const normalizedY = (relY - centerY) / ry;
-    return (normalizedX * normalizedX + normalizedY * normalizedY) < 1;
-  }
-}
-
-function renderStaticCoralMap(w, h, corals) {
-  const coralMap = new Uint8Array(w * h);
-  
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w; x++) {
-      for (const coral of corals) {
-        if (isInsideStaticCoral(x, y, coral)) {
-          coralMap[y * w + x] = coral.colorIndex + 1;
-          break;
-        }
-      }
-    }
-  }
-  return coralMap;
 }
 
 export default function DitheredBackground() {
@@ -160,11 +284,10 @@ export default function DitheredBackground() {
 
     const ripples = [];
     const trailRipples = [];
+    let allPlants = [];
     let animationId;
     let lastMouseX = 0;
     let lastMouseY = 0;
-    let staticCoralMap = null;
-    let seaweedList = [];
     let fishList = [];
     let scaledWidth = 0;
     let scaledHeight = 0;
@@ -176,10 +299,14 @@ export default function DitheredBackground() {
       scaledWidth = Math.ceil(canvas.width / SCALE);
       scaledHeight = Math.ceil(canvas.height / SCALE);
       
-      const staticCorals = generateStaticCorals(scaledWidth, scaledHeight);
-      staticCoralMap = renderStaticCoralMap(scaledWidth, scaledHeight, staticCorals);
-      seaweedList = generateSeaweed(scaledWidth, scaledHeight);
+      const seaweedList = generateSeaweed(scaledWidth, scaledHeight);
+      const coralList = generateCorals(scaledWidth, scaledHeight);
       fishList = generateFish(scaledWidth, scaledHeight);
+
+      allPlants = [
+        ...seaweedList.map(s => ({ ...s, plantType: 'seaweed' })),
+        ...coralList.map(c => ({ ...c, plantType: 'coral' })),
+      ].sort((a, b) => a.layer - b.layer);
     }
 
     function handleClick(e) {
@@ -212,30 +339,133 @@ export default function DitheredBackground() {
       }
     }
 
-    function getSeaweedColor(x, y, time) {
-      for (const sw of seaweedList) {
-        const relY = sw.baseY - y;
-        if (relY < 0 || relY > sw.height) continue;
-        
-        const heightRatio = relY / sw.height;
-        const sway = Math.sin(time * sw.speed + sw.phase + relY * 0.05) * (5 + heightRatio * 10);
-        const relX = x - sw.x - sway * heightRatio;
-        const width = sw.width * (1 - heightRatio * 0.4);
-        
-        if (Math.abs(relX) < width) {
-          return sw.colorIndex + 1;
+    function getSeaweedPixelSingle(px, py, time, sw) {
+      const spriteH = SEAWEED_HEIGHT * sw.size;
+      
+      const relYFromBottom = sw.baseY - py;
+      if (relYFromBottom < 0 || relYFromBottom > spriteH) return null;
+      
+      const heightRatio = relYFromBottom / spriteH;
+      const sway = Math.sin(time * sw.speed + sw.phase) * (3 + heightRatio * 8);
+      
+      const swayedX = sw.x + sway * heightRatio;
+      const localX = (px - swayedX) / sw.size;
+      const localY = (SEAWEED_HEIGHT - 1) - (relYFromBottom / sw.size);
+      
+      const spriteX = Math.floor(localX + SEAWEED_WIDTH / 2);
+      const spriteY = Math.floor(localY);
+      
+      if (spriteX >= 0 && spriteX < SEAWEED_WIDTH && spriteY >= 0 && spriteY < SEAWEED_HEIGHT) {
+        const pixelType = seaweedSprite[spriteY][spriteX];
+        if (pixelType > 0) {
+          const palette = seaweedPalettes[sw.paletteIndex];
+          switch (pixelType) {
+            case 1: return palette.dark;
+            case 2: return palette.mid;
+            case 3: return palette.light;
+          }
         }
       }
-      return 0;
+      return null;
+    }
+
+    function getCoralPixelSingle(px, py, coral) {
+      let sprite, spriteW, spriteH;
+      
+      if (coral.type === 'round') {
+        sprite = roundCoralSprite;
+        spriteW = ROUND_CORAL_WIDTH;
+        spriteH = ROUND_CORAL_HEIGHT;
+      } else if (coral.type === 'fan') {
+        sprite = fanCoralSprite;
+        spriteW = FAN_CORAL_WIDTH;
+        spriteH = FAN_CORAL_HEIGHT;
+      } else {
+        sprite = tubeCoralSprite;
+        spriteW = TUBE_CORAL_WIDTH;
+        spriteH = TUBE_CORAL_HEIGHT;
+      }
+      
+      const scaledH = spriteH * coral.size;
+      
+      const relYFromBottom = coral.baseY - py;
+      if (relYFromBottom < 0 || relYFromBottom > scaledH) return null;
+      
+      const localX = (px - coral.x) / coral.size;
+      const localY = (spriteH - 1) - (relYFromBottom / coral.size);
+      
+      const spriteX = Math.floor(localX + spriteW / 2);
+      const spriteY = Math.floor(localY);
+      
+      if (spriteX >= 0 && spriteX < spriteW && spriteY >= 0 && spriteY < spriteH) {
+        const pixelType = sprite[spriteY][spriteX];
+        if (pixelType > 0) {
+          const palette = coralPalettes[coral.paletteIndex];
+          switch (pixelType) {
+            case 1: return palette.dark;
+            case 2: return palette.mid;
+            case 3: return palette.light;
+            case 4: return palette.highlight;
+          }
+        }
+      }
+      return null;
+    }
+
+    function getPlantPixel(px, py, time) {
+      let color = null;
+      for (const plant of allPlants) {
+        let c = null;
+        if (plant.plantType === 'seaweed') {
+          c = getSeaweedPixelSingle(px, py, time, plant);
+        } else {
+          c = getCoralPixelSingle(px, py, plant);
+        }
+        if (c) {
+          color = c;
+        }
+      }
+      return color;
     }
 
     function updateFish() {
       for (const fish of fishList) {
-        fish.x += fish.speed * fish.direction;
-        fish.tailPhase += 0.3;
+        for (const ripple of ripples) {
+          const dx = fish.x - ripple.x;
+          const dy = fish.y - ripple.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          
+          if (dist < ripple.maxRadius && dist > 0) {
+            const force = (1 - dist / ripple.maxRadius) * ripple.strength * 0.5;
+            fish.vx += (dx / dist) * force;
+            fish.vy += (dy / dist) * force;
+          }
+        }
         
+        for (const ripple of trailRipples) {
+          const dx = fish.x - ripple.x;
+          const dy = fish.y - ripple.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          
+          if (dist < ripple.maxRadius && dist > 0) {
+            const force = (1 - dist / ripple.maxRadius) * ripple.strength * 0.3;
+            fish.vx += (dx / dist) * force;
+            fish.vy += (dy / dist) * force;
+          }
+        }
+        
+        fish.x += fish.speed * fish.direction + fish.vx;
+        fish.y += fish.vy;
+        
+        fish.vx *= 0.95;
+        fish.vy *= 0.95;
+        
+        fish.tailPhase += 0.3;
         const wobble = Math.sin(time * fish.wobbleSpeed + fish.wobblePhase) * 0.2;
         fish.y += wobble;
+        
+        if (fish.y < 10) fish.y = 10;
+        if (fish.y > scaledHeight * 0.55) fish.y = scaledHeight * 0.55;
         
         const fishW = FISH_WIDTH * fish.size;
         if (fish.direction === 1 && fish.x > scaledWidth + fishW) {
@@ -250,7 +480,7 @@ export default function DitheredBackground() {
 
     function getFishPixel(px, py) {
       for (const fish of fishList) {
-        const tailWiggle = Math.sin(fish.tailPhase) * 2;
+        const tailWiggle = Math.sin(fish.tailPhase) * 1.5;
         
         let localX, localY;
         if (fish.direction === 1) {
@@ -261,9 +491,9 @@ export default function DitheredBackground() {
           localY = (py - fish.y) / fish.size;
         }
         
-        // Tail wiggle on left side
-        if (localX < 5) {
-          localY -= tailWiggle * (1 - localX / 5);
+        // Tail wiggle effect on the tail/left side
+        if (localX < 6) {
+          localY -= tailWiggle * (1 - localX / 6);
         }
         
         const spriteX = Math.floor(localX);
@@ -275,11 +505,10 @@ export default function DitheredBackground() {
             const palette = fishPalettes[fish.paletteIndex];
             switch (pixelType) {
               case 1: return palette.body;
-              case 2: return palette.stripe;
-              case 3: return palette.eyeWhite;
-              case 4: return palette.pupil;
-              case 5: return palette.fin;
-              case 6: return palette.belly;
+              case 2: return palette.bodyDark;
+              case 3: return palette.bodyLight;
+              case 4: return palette.eyeWhite;
+              case 5: return palette.pupil;
             }
           }
         }
@@ -309,35 +538,26 @@ export default function DitheredBackground() {
         if (trailRipples[i].radius > trailRipples[i].maxRadius) trailRipples.splice(i, 1);
       }
 
-      const seaweedStartY = Math.floor(scaledHeight * 0.3); // Adjusted for taller seaweed
-
       for (let y = 0; y < scaledHeight; y++) {
         for (let x = 0; x < scaledWidth; x++) {
           const i = (y * scaledWidth + x) * 4;
           
           const fishColor = getFishPixel(x, y);
-          
           if (fishColor) {
-            const dx = (x - centerX) / scaledWidth;
-            const dy = (y - centerY) / scaledHeight;
-            const distance = Math.sqrt(dx * dx + dy * dy);
-            const pattern = Math.sin(distance * 8) * 0.5 + 0.5;
-            const gradientValue = pattern * 0.6 + 0.2;
-            const threshold = bayerMatrix[y % 8][x % 8] / 64;
-            const isDark = gradientValue < threshold;
-            
-            const factor = isDark ? 0.7 : 1.0;
-            data[i] = Math.floor(fishColor[0] * factor);
-            data[i + 1] = Math.floor(fishColor[1] * factor);
-            data[i + 2] = Math.floor(fishColor[2] * factor);
+            data[i] = fishColor[0];
+            data[i + 1] = fishColor[1];
+            data[i + 2] = fishColor[2];
             data[i + 3] = 255;
             continue;
           }
           
-          let colorIdx = staticCoralMap[y * scaledWidth + x];
-          
-          if (colorIdx === 0 && y > seaweedStartY) {
-            colorIdx = getSeaweedColor(x, y, time);
+          const plantColor = getPlantPixel(x, y, time);
+          if (plantColor) {
+            data[i] = plantColor[0];
+            data[i + 1] = plantColor[1];
+            data[i + 2] = plantColor[2];
+            data[i + 3] = 255;
+            continue;
           }
           
           const dx = (x - centerX) / scaledWidth;
@@ -371,27 +591,14 @@ export default function DitheredBackground() {
           const threshold = bayerMatrix[y % 8][x % 8] / 64;
           const isDark = gradientValue < threshold;
           
-          if (colorIdx > 0) {
-            const colors = coralColors[colorIdx - 1];
-            if (isDark) {
-              data[i] = colors.dark[0];
-              data[i + 1] = colors.dark[1];
-              data[i + 2] = colors.dark[2];
-            } else {
-              data[i] = colors.light[0];
-              data[i + 1] = colors.light[1];
-              data[i + 2] = colors.light[2];
-            }
+          if (isDark) {
+            data[i] = 37;
+            data[i + 1] = 99;
+            data[i + 2] = 235;
           } else {
-            if (isDark) {
-              data[i] = 37;
-              data[i + 1] = 99;
-              data[i + 2] = 235;
-            } else {
-              data[i] = 240;
-              data[i + 1] = 248;
-              data[i + 2] = 255;
-            }
+            data[i] = 240;
+            data[i + 1] = 248;
+            data[i + 2] = 255;
           }
           data[i + 3] = 255;
         }
