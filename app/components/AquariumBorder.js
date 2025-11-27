@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { bayerMatrix } from './constants';
 
 export default function AquariumBorder() {
-  const [isOn, setIsOn] = useState(true);
+  const [isOn, setIsOn] = useState(false);
 
   useEffect(() => {
     const topCanvas = document.getElementById('top-border-canvas');
@@ -20,32 +20,43 @@ export default function AquariumBorder() {
     function drawDitheredBorder(canvas, ctx) {
       canvas.width = window.innerWidth;
       canvas.height = canvas.id === 'top-border-canvas' ? 64 : 80;
-
+    
       const imageData = ctx.createImageData(canvas.width, canvas.height);
       const data = imageData.data;
-
+    
+      const isTop = canvas.id === 'top-border-canvas';
+    
       for (let y = 0; y < canvas.height; y++) {
         for (let x = 0; x < canvas.width; x++) {
           const i = (y * canvas.width + x) * 4;
           
-          const greyValue = 0.5;
+          // Create a vertical gradient for depth
+          let greyValue;
+          if (isTop) {
+            // Top border: dark at top → light at bottom
+            greyValue = 0.25 + (y / canvas.height) * 0.5;
+          } else {
+            // Bottom border: light at top → dark at bottom
+            greyValue = 0.7 - (y / canvas.height) * 0.4;
+          }
           
           const threshold = bayerMatrix[y % 8][x % 8] / 64;
           const isDark = greyValue < threshold;
           
+          // More contrasting colors for visibility
           if (isDark) {
-            data[i] = 100;
-            data[i + 1] = 100;
-            data[i + 2] = 100;
+            data[i] = 70;      // Darker grey
+            data[i + 1] = 70;
+            data[i + 2] = 75;
           } else {
-            data[i] = 180;
-            data[i + 1] = 180;
-            data[i + 2] = 180;
+            data[i] = 200;     // Lighter grey
+            data[i + 1] = 200;
+            data[i + 2] = 205;
           }
           data[i + 3] = 255;
         }
       }
-
+    
       ctx.putImageData(imageData, 0, 0);
     }
 
