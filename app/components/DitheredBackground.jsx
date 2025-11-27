@@ -182,22 +182,22 @@ const coralPalettes = [
 // Fish palettes - 9 color slots per fish
 // 1=body, 2=bodyDark, 3=bodyLight, 4=eyeWhite, 5=pupil
 const fishPalettes = [
-  // Bright Orange (clownfish vibes)
-  { body: [255, 140, 50], bodyDark: [230, 90, 20], bodyLight: [255, 200, 100], eyeWhite: [255, 255, 255], pupil: [20, 20, 40] },
-  // Hot Pink
-  { body: [255, 100, 150], bodyDark: [220, 60, 120], bodyLight: [255, 170, 200], eyeWhite: [255, 255, 255], pupil: [20, 20, 40] },
-  // Electric Cyan
+  // Clownfish
+  { body: [255, 116, 36], bodyDark: [128, 80, 3], bodyLight: [255, 177, 163], eyeWhite: [255, 255, 255], pupil: [20, 20, 40] },
+  // Tropical Pink
+  { body: [240, 34, 140], bodyDark: [145, 9, 52], bodyLight: [252, 149, 182], eyeWhite: [255, 255, 255], pupil: [20, 20, 40] },
+  // Ocean Teal
   { body: [0, 220, 220], bodyDark: [0, 160, 180], bodyLight: [100, 255, 255], eyeWhite: [255, 255, 255], pupil: [20, 20, 40] },
-  // Vivid Blue
-  { body: [60, 140, 255], bodyDark: [30, 90, 200], bodyLight: [130, 190, 255], eyeWhite: [255, 255, 255], pupil: [20, 20, 40] },
-  // Lime Green
-  { body: [180, 230, 40], bodyDark: [120, 180, 20], bodyLight: [220, 255, 100], eyeWhite: [255, 255, 255], pupil: [20, 20, 40] },
-  // Bright Purple
-  { body: [180, 80, 255], bodyDark: [130, 40, 200], bodyLight: [220, 150, 255], eyeWhite: [255, 255, 255], pupil: [20, 20, 40] },
-  // Coral Red
-  { body: [255, 90, 90], bodyDark: [220, 50, 60], bodyLight: [255, 160, 150], eyeWhite: [255, 255, 255], pupil: [20, 20, 40] },
-  // Sunny Yellow
-  { body: [255, 220, 60], bodyDark: [230, 180, 30], bodyLight: [255, 245, 140], eyeWhite: [255, 255, 255], pupil: [20, 20, 40] },
+  // Royal
+  { body: [63, 242, 206], bodyDark: [28, 107, 91], bodyLight: [167, 250, 223], eyeWhite: [255, 255, 255], pupil: [20, 20, 40] },
+  // Parrot
+  { body: [17, 104, 191], bodyDark: [8, 14, 120], bodyLight: [143, 195, 247], eyeWhite: [255, 255, 255], pupil: [20, 20, 40] },
+  // Galaxy
+  { body: [62, 153, 54], bodyDark: [15, 59, 11], bodyLight: [173, 227, 168], eyeWhite: [255, 255, 255], pupil: [20, 20, 40] },
+  // Flame
+  { body: [101, 34, 189], bodyDark: [37, 6, 79], bodyLight: [163, 121, 219], eyeWhite: [255, 255, 255], pupil: [20, 20, 40] },
+  // Sunshine
+  { body: [255, 209, 56], bodyDark: [214, 76, 6], bodyLight: [255, 229, 181], eyeWhite: [255, 255, 255], pupil: [20, 20, 40] },
 ];
 
 const FISH_WIDTH = 18;
