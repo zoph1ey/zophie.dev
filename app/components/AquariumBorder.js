@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { bayerMatrix } from './constants';
 
-export default function AquariumBorder({ isOn, setIsOn }) {
+export default function AquariumBorder({ isOn, setIsOn, disabled }) {
 
   useEffect(() => {
     const topCanvas = document.getElementById('top-border-canvas');
@@ -115,7 +115,9 @@ export default function AquariumBorder({ isOn, setIsOn }) {
               height: '4em',
               overflow: 'hidden',
               borderBottom: '0.5em solid #444',
-              cursor: 'pointer',
+              cursor: disabled ? 'not-allowed' : 'pointer',
+              opacity: disabled ? 0.5 : 1,
+              transition: 'opacity 0.3s ease-in-out',
             }}>
               {/* Background frame */}
               <div style={{
@@ -133,7 +135,8 @@ export default function AquariumBorder({ isOn, setIsOn }) {
               <input
                 type="checkbox"
                 checked={isOn}
-                onChange={() => setIsOn(!isOn)}
+                onChange={() => !disabled && setIsOn(!isOn)}
+                disabled={disabled}
                 style={{
                   opacity: 0,
                   width: 0,
@@ -143,7 +146,7 @@ export default function AquariumBorder({ isOn, setIsOn }) {
 
               {/* Left side - 0 */}
               <span style={{
-                cursor: 'pointer',
+                cursor: disabled ? 'not-allowed' : 'pointer',
                 position: 'absolute',
                 display: 'flex',
                 alignItems: 'center',
@@ -173,7 +176,7 @@ export default function AquariumBorder({ isOn, setIsOn }) {
 
               {/* Right side - | */}
               <span style={{
-                cursor: 'pointer',
+                cursor: disabled ? 'not-allowed' : 'pointer',
                 position: 'absolute',
                 display: 'flex',
                 alignItems: 'center',

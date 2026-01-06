@@ -12,6 +12,10 @@ export default function Home() {
   const [isReturning, setIsReturning] = useState(false); // Track if we're returning to home
 
   const handleSectionChange = (sectionId) => {
+    // Turn off toggle if it's on before sliding to treasure page
+    if (isOn) {
+      setIsOn(false);
+    }
     setActiveSection(sectionId);
     setSelectedTreasure(sectionId);
     setIsReturning(false);
@@ -37,7 +41,7 @@ export default function Home() {
       <TreasureChest onSectionChange={handleSectionChange} selectedTreasure={selectedTreasure} onBack={handleCloseSection} />
 
       {/* Aquarium Borders - pass the state */}
-      <AquariumBorder isOn={isOn} setIsOn={setIsOn} />
+      <AquariumBorder isOn={isOn} setIsOn={setIsOn} disabled={selectedTreasure !== null} />
     </div>
   )
 }
