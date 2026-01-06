@@ -279,7 +279,7 @@ export default function TreasureChest({ onSectionChange, selectedTreasure, onBac
     
     setTimeout(() => {
       // On mobile, position treasures closer together so all are visible
-      const mobilePositions = [25, 50, 75]; // About, Projects, Contacts
+      const mobilePositions = [20, 50, 80]; // About, Projects, Contacts
       const desktopPositions = [-40, 50, 140];
       const positions = isMobile ? mobilePositions : desktopPositions;
 
