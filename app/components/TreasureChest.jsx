@@ -278,12 +278,17 @@ export default function TreasureChest({ onSectionChange, selectedTreasure, onBac
     setBubbles(burstBubbles);
     
     setTimeout(() => {
+      // On mobile, position treasures closer together so all are visible
+      const mobilePositions = [25, 50, 75]; // About, Projects, Contacts
+      const desktopPositions = [-40, 50, 140];
+      const positions = isMobile ? mobilePositions : desktopPositions;
+
       const newTreasures = treasureConfig.map((config, index) => ({
         ...config,
         x: 50,
-        targetX: index === 0 ? -40 : index === 1 ? 50 : 140, // Way further apart
+        targetX: positions[index],
         y: 50,
-        targetY: -200,
+        targetY: isMobile ? -180 : -200, // Slightly higher on mobile
         bobPhase: Math.random() * Math.PI * 2,
         visible: true,
         scale: TREASURE_SCALE,
