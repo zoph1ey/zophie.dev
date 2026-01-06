@@ -228,12 +228,37 @@ function generateCorals(w, h) {
 function generateFish(w, h) {
   const fish = [];
   const numFish = 10 + Math.floor(Math.random() * 7); // Increased by ~20% (was 8-13, now 10-16)
+  const minDistance = 100; // Minimum distance between fish to prevent clustering
 
   for (let i = 0; i < numFish; i++) {
+    let attempts = 0;
+    let validPosition = false;
+    let x, y;
+
+    // Try to find a position that's far enough from other fish
+    while (!validPosition && attempts < 50) {
+      x = Math.random() * w;
+      y = h * 0.1 + Math.random() * (h * 0.45);
+
+      validPosition = true;
+      // Check distance from all existing fish
+      for (const otherFish of fish) {
+        const dx = x - otherFish.x;
+        const dy = y - otherFish.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+
+        if (dist < minDistance) {
+          validPosition = false;
+          break;
+        }
+      }
+      attempts++;
+    }
+
     const size = 2 + Math.random() * 2;
     fish.push({
-      x: Math.random() * w,
-      y: h * 0.1 + Math.random() * (h * 0.45),
+      x: x || Math.random() * w, // Fallback if no valid position found
+      y: y || h * 0.1 + Math.random() * (h * 0.45),
       size: size,
       speed: 0.2 + Math.random() * 0.4,
       direction: Math.random() > 0.5 ? 1 : -1,
@@ -296,7 +321,7 @@ export default function DitheredBackground({ isOn }) {
         x: e.clientX / SCALE,
         y: e.clientY / SCALE,
         radius: 0,
-        maxRadius: 80, // Increased from 50 to 80 for larger effect area
+        maxRadius: 64, // Reduced from 80 to 64 (20% less area)
         speed: 5,
         strength: 1
       });
@@ -312,7 +337,7 @@ export default function DitheredBackground({ isOn }) {
           x: e.clientX / SCALE,
           y: e.clientY / SCALE,
           radius: 0,
-          maxRadius: 60, // Increased from 40 to 60 for larger hover effect
+          maxRadius: 48, // Reduced from 60 to 48 (20% less area)
           speed: 4,
           strength: 1
         });
@@ -439,27 +464,55 @@ export default function DitheredBackground({ isOn }) {
       for (const fish of fishList) {
         // Apply ripple forces from clicks
         for (const ripple of ripples) {
-          const dx = fish.x - ripple.x;
-          const dy = fish.y - ripple.y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
+          // Check distance from all rendered positions (accounting for wraparound)
+          let minDist = Infinity;
+          let bestDx = 0;
+          let bestDy = 0;
 
-          if (dist < ripple.maxRadius && dist > 0) {
-            const force = (1 - dist / ripple.maxRadius) * ripple.strength * 1.2; // Increased from 0.5 to 1.2
-            fish.vx += (dx / dist) * force;
-            fish.vy += (dy / dist) * force;
+          for (let offset = -scaledWidth; offset <= scaledWidth; offset += scaledWidth) {
+            const renderedX = fish.x - scrollOffset + offset;
+            const dx = renderedX - ripple.x;
+            const dy = fish.y - ripple.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+
+            if (dist < minDist) {
+              minDist = dist;
+              bestDx = dx;
+              bestDy = dy;
+            }
+          }
+
+          if (minDist < ripple.maxRadius && minDist > 0) {
+            const force = (1 - minDist / ripple.maxRadius) * ripple.strength * 0.96; // Reduced from 1.2 to 0.96 (20% less)
+            fish.vx += (bestDx / minDist) * force;
+            fish.vy += (bestDy / minDist) * force;
           }
         }
 
         // Apply ripple forces from mouse trails
         for (const ripple of trailRipples) {
-          const dx = fish.x - ripple.x;
-          const dy = fish.y - ripple.y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
+          // Check distance from all rendered positions (accounting for wraparound)
+          let minDist = Infinity;
+          let bestDx = 0;
+          let bestDy = 0;
 
-          if (dist < ripple.maxRadius && dist > 0) {
-            const force = (1 - dist / ripple.maxRadius) * ripple.strength * 0.8; // Increased from 0.3 to 0.8
-            fish.vx += (dx / dist) * force;
-            fish.vy += (dy / dist) * force;
+          for (let offset = -scaledWidth; offset <= scaledWidth; offset += scaledWidth) {
+            const renderedX = fish.x - scrollOffset + offset;
+            const dx = renderedX - ripple.x;
+            const dy = fish.y - ripple.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+
+            if (dist < minDist) {
+              minDist = dist;
+              bestDx = dx;
+              bestDy = dy;
+            }
+          }
+
+          if (minDist < ripple.maxRadius && minDist > 0) {
+            const force = (1 - minDist / ripple.maxRadius) * ripple.strength * 0.64; // Reduced from 0.8 to 0.64 (20% less)
+            fish.vx += (bestDx / minDist) * force;
+            fish.vy += (bestDy / minDist) * force;
           }
         }
 
@@ -467,9 +520,9 @@ export default function DitheredBackground({ isOn }) {
         fish.x += fish.vx;
         fish.y += fish.vy;
 
-        // Apply damping (less damping = fish move further)
-        fish.vx *= 0.92; // Changed from 0.95 to 0.92 (less damping)
-        fish.vy *= 0.92;
+        // Apply damping (more damping = fish move less)
+        fish.vx *= 0.94; // Increased from 0.92 to 0.94 (more damping)
+        fish.vy *= 0.94;
 
         // Only do independent swimming movement if NOT scrolling
         if (!isOnRef.current) {
@@ -488,9 +541,14 @@ export default function DitheredBackground({ isOn }) {
           }
         }
 
-        // Keep fish within bounds
+        // Keep fish within bounds (Y axis)
         if (fish.y < 10) fish.y = 10;
         if (fish.y > scaledHeight * 0.55) fish.y = scaledHeight * 0.55;
+
+        // Keep fish within bounds (X axis) - wrap around to prevent drifting off-screen
+        const margin = 100;
+        if (fish.x < -margin) fish.x = scaledWidth + (fish.x % scaledWidth);
+        if (fish.x > scaledWidth + margin) fish.x = fish.x % scaledWidth;
 
         fish.tailPhase += 0.3;
       }
