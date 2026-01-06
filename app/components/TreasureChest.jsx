@@ -481,7 +481,7 @@ export default function TreasureChest({ onSectionChange, selectedTreasure, onBac
         <div
           className="fixed z-40 flex flex-col items-center justify-center"
           style={{
-            top: '55%',
+            top: '50%',
             left: '50%',
             transform: 'translate(-50%, -50%)',
             opacity: showBackButton ? 1 : 0,
@@ -504,7 +504,7 @@ export default function TreasureChest({ onSectionChange, selectedTreasure, onBac
             >
               <span style={{ display: 'block', marginBottom: '12px' }}>Hi, I'm Nurfarahana !</span>
               <span style={{ display: 'block', marginBottom: '12px' }}>Final year Computer Science student at Taylor's University, specializing in AI and Data Science.</span>
-              <span style={{ display: 'block', marginBottom: '12px' }}>I'm drawn to Machine Learning, Neural Networks, and UI/UX</span>
+              <span style={{ display: 'block', marginBottom: '12px' }}>I'm drawn to Machine Learning, Neural Networks, and UI/UX.</span>
               <span style={{ display: 'block', marginBottom: '12px' }}>I like building things that are both intelligent and well-designed.</span>
               <span style={{ display: 'block', marginBottom: '12px' }}>Outside of tech, I play piano, violin, and omnichord. I also enjoy theatre, video games, and anything creative.</span>
               <span style={{ display: 'block' }}>Currently open to opportunities in AI, ML, Data Science, or Frontend Development.</span>
@@ -526,17 +526,86 @@ export default function TreasureChest({ onSectionChange, selectedTreasure, onBac
           )}
 
           {selectedTreasure === 'contacts' && (
-            <p
+            <div
               style={{
                 fontFamily: '"Pixelify Sans", sans-serif',
-                fontSize: '20px',
-                fontWeight: 400,
-                color: '#000',
-                lineHeight: 1.6,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '50px',
               }}
             >
-              Contact info coming soon...
-            </p>
+              <p
+                style={{
+                  fontSize: '40px',
+                  fontWeight: 600,
+                  color: '#000',
+                  textShadow: '2px 2px 0px rgb(255, 255, 255), -1px -1px 0px rgba(255, 255, 255, 0.8)',
+                  margin: 0,
+                }}
+              >
+                Let's Connect
+              </p>
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: '50px',
+                  fontSize: '30px',
+                }}
+              >
+                <a
+                  href="https://www.linkedin.com/in/nurfarahanarosli/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    color: '#000',
+                    textDecoration: 'none',
+                    transition: 'opacity 0.2s',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.opacity = '0.6'}
+                  onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
+                >
+                  <span>💼</span> LinkedIn
+                </a>
+                <a
+                  href="mailto:hello.nurfarahana@gmail.com"
+                  style={{
+                    color: '#000',
+                    textDecoration: 'none',
+                    transition: 'opacity 0.2s',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.opacity = '0.6'}
+                  onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
+                >
+                  <span>📧</span> hello.nurfarahana@gmail.com
+                </a>
+                <a
+                  href="/Nurfarahana_Resume.pdf"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    color: '#000',
+                    textDecoration: 'none',
+                    transition: 'opacity 0.2s',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.opacity = '0.6'}
+                  onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
+                >
+                  <span>📄</span> Resume
+                </a>
+              </div>
+            </div>
           )}
         </div>
       )}
