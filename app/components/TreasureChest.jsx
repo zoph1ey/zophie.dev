@@ -312,12 +312,12 @@ export default function TreasureChest({ onSectionChange, selectedTreasure, onBac
     if (selectedTreasure) {
       const timer = setTimeout(() => {
         setShowBackButton(true);
-      }, 1500); // delay
+      }, isMobile ? 300 : 1500); // 1 second faster on mobile
       return () => clearTimeout(timer);
     } else {
       setShowBackButton(false);
     }
-  }, [selectedTreasure]);
+  }, [selectedTreasure, isMobile]);
 
   // Animation loop for bubbles and treasures
   useEffect(() => {
@@ -401,7 +401,7 @@ export default function TreasureChest({ onSectionChange, selectedTreasure, onBac
           backdropFilter: 'blur(8px)',
           WebkitBackdropFilter: 'blur(8px)',
           opacity: selectedTreasure ? 1 : 0,
-          transition: 'opacity 2.0s ease-in-out',
+          transition: isMobile ? 'opacity 1.0s ease-in-out' : 'opacity 2.0s ease-in-out',
         }}
       />
 
