@@ -379,6 +379,18 @@ export default function TreasureChest({ onSectionChange, selectedTreasure, onBac
 
   return (
     <>
+      {/* Frosted Glass Overlay - fades in when treasure is selected */}
+      <div
+        className="fixed inset-0 z-30 pointer-events-none"
+        style={{
+          backgroundColor: 'rgba(255, 255, 255, 0.3)',
+          backdropFilter: 'blur(8px)',
+          WebkitBackdropFilter: 'blur(8px)',
+          opacity: selectedTreasure ? 1 : 0,
+          transition: 'opacity 2.0s ease-in-out',
+        }}
+      />
+
       {/* Back Button - appears top-left after slide animation completes */}
       <button
         onClick={handleBackClick}

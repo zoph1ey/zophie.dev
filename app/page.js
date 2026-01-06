@@ -3,7 +3,6 @@ import { useState } from 'react'
 import DitheredBackground from './components/DitheredBackground'
 import AquariumBorder from './components/AquariumBorder'
 import TreasureChest from './components/TreasureChest'
-import SectionContent from './components/SectionContent'
 
 export default function Home() {
   const [isOn, setIsOn] = useState(false);
@@ -32,10 +31,6 @@ export default function Home() {
       {/* Dithered Background with pixel art fish */}
       <DitheredBackground isOn={isOn} activeSection={activeSection} isReturning={isReturning} onReturnComplete={() => setIsReturning(false)} />
 
-      {/* Section Content - slides in from right */}
-      {activeSection && (
-        <SectionContent section={activeSection} onClose={handleCloseSection} />
-      )}
 
       {/* Treasure Chest Navigation */}
       <TreasureChest onSectionChange={handleSectionChange} selectedTreasure={selectedTreasure} onBack={handleCloseSection} />
