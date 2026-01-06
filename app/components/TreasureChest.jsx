@@ -236,8 +236,17 @@ export default function TreasureChest({ onSectionChange, selectedTreasure, onBac
   const [bubbles, setBubbles] = useState([]);
   const [treasures, setTreasures] = useState([]);
   const [showBackButton, setShowBackButton] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const canvasRef = useRef(null);
   const burstDoneRef = useRef(false);
+
+  // Detect mobile viewport
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const treasureConfig = [
     { id: 'about', label: 'About Me', sprite: shellSprite, palette: shellPalette, width: 16, height: 14 },
@@ -396,14 +405,14 @@ export default function TreasureChest({ onSectionChange, selectedTreasure, onBac
         onClick={handleBackClick}
         className="fixed z-50 cursor-pointer"
         style={{
-          top: '80px',
-          left: '30px',
+          top: isMobile ? '70px' : '80px',
+          left: isMobile ? '10px' : '30px',
           opacity: showBackButton ? 1 : 0,
           pointerEvents: showBackButton ? 'auto' : 'none',
           transition: 'opacity 0.3s ease-in-out',
           background: 'none',
           border: 'none',
-          padding: '15px 25px',
+          padding: isMobile ? '10px 15px' : '15px 25px',
           display: 'flex',
           alignItems: 'center',
           gap: '10px',
@@ -412,7 +421,7 @@ export default function TreasureChest({ onSectionChange, selectedTreasure, onBac
         <span
           style={{
             fontFamily: '"Pixelify Sans", sans-serif',
-            fontSize: '28px',
+            fontSize: isMobile ? '20px' : '28px',
             fontWeight: 600,
             color: '#000',
             textShadow: '2px 2px 0px rgb(255, 255, 255), -1px -1px 0px rgba(255, 255, 255, 0.8)',
@@ -430,7 +439,7 @@ export default function TreasureChest({ onSectionChange, selectedTreasure, onBac
           <div
             className="fixed z-50 flex flex-col items-center"
             style={{
-              top: '80px',
+              top: isMobile ? '70px' : '80px',
               left: '50%',
               transform: 'translateX(-50%)',
               opacity: showBackButton ? 1 : 0,
@@ -463,7 +472,7 @@ export default function TreasureChest({ onSectionChange, selectedTreasure, onBac
             <span
               style={{
                 fontFamily: '"Pixelify Sans", sans-serif',
-                fontSize: '32px',
+                fontSize: isMobile ? '24px' : '32px',
                 fontWeight: 600,
                 color: '#000',
                 textShadow: '2px 2px 0px rgb(255, 255, 255), -1px -1px 0px rgba(255, 255, 255, 0.8)',
@@ -487,16 +496,16 @@ export default function TreasureChest({ onSectionChange, selectedTreasure, onBac
             opacity: showBackButton ? 1 : 0,
             transition: 'opacity 0.5s ease-in-out',
             textAlign: 'left',
-            maxWidth: '1200px',
-            width: '90%',
-            padding: '20px',
+            maxWidth: isMobile ? '100%' : '1200px',
+            width: isMobile ? '100%' : '90%',
+            padding: isMobile ? '15px 20px' : '20px',
           }}
         >
           {selectedTreasure === 'about' && (
             <p
               style={{
                 fontFamily: '"Pixelify Sans", sans-serif',
-                fontSize: '20px',
+                fontSize: isMobile ? '16px' : '20px',
                 fontWeight: 400,
                 color: '#000',
                 lineHeight: 1.6,
@@ -532,12 +541,12 @@ export default function TreasureChest({ onSectionChange, selectedTreasure, onBac
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
-                gap: '50px',
+                gap: isMobile ? '25px' : '50px',
               }}
             >
               <p
                 style={{
-                  fontSize: '40px',
+                  fontSize: isMobile ? '28px' : '40px',
                   fontWeight: 600,
                   color: '#000',
                   textShadow: '2px 2px 0px rgb(255, 255, 255), -1px -1px 0px rgba(255, 255, 255, 0.8)',
@@ -549,10 +558,10 @@ export default function TreasureChest({ onSectionChange, selectedTreasure, onBac
               <div
                 style={{
                   display: 'flex',
-                  flexDirection: 'row',
+                  flexDirection: isMobile ? 'column' : 'row',
                   alignItems: 'center',
-                  gap: '50px',
-                  fontSize: '30px',
+                  gap: isMobile ? '20px' : '50px',
+                  fontSize: isMobile ? '18px' : '30px',
                 }}
               >
                 <a
