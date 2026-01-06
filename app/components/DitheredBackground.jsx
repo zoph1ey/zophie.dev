@@ -225,9 +225,12 @@ function generateCorals(w, h) {
   return corals;
 }
 
-function generateFish(w, h) {
+function generateFish(w, h, isMobile) {
   const fish = [];
-  const numFish = 10 + Math.floor(Math.random() * 7); // Increased by ~20% (was 8-13, now 10-16)
+  // Mobile: 5-8 fish (50% less), Desktop: 10-16 fish
+  const numFish = isMobile
+    ? 5 + Math.floor(Math.random() * 4)
+    : 10 + Math.floor(Math.random() * 7);
   const minDistance = 100; // Minimum distance between fish to prevent clustering
 
   for (let i = 0; i < numFish; i++) {
@@ -256,11 +259,15 @@ function generateFish(w, h) {
     }
 
     const size = 2 + Math.random() * 2;
+    // Desktop: 50% faster (0.6-1.5), Mobile: original speed (0.4-1.0)
+    const speed = isMobile
+      ? 0.4 + Math.random() * 0.6
+      : 0.6 + Math.random() * 0.9;
     fish.push({
       x: x || Math.random() * w, // Fallback if no valid position found
       y: y || h * 0.1 + Math.random() * (h * 0.45),
       size: size,
-      speed: 0.4 + Math.random() * 0.6, // Increased from 0.2-0.6 to 0.4-1.0
+      speed: speed,
       direction: Math.random() > 0.5 ? 1 : -1,
       paletteIndex: Math.floor(Math.random() * fishPalettes.length),
       wobblePhase: Math.random() * Math.PI * 2,
@@ -320,10 +327,11 @@ export default function DitheredBackground({ isOn, activeSection, isReturning, o
       canvas.height = window.innerHeight;
       scaledWidth = Math.ceil(canvas.width / SCALE);
       scaledHeight = Math.ceil(canvas.height / SCALE);
-      
+
+      const isMobile = window.innerWidth < 768;
       const seaweedList = generateSeaweed(scaledWidth, scaledHeight);
       const coralList = generateCorals(scaledWidth, scaledHeight);
-      fishList = generateFish(scaledWidth, scaledHeight);
+      fishList = generateFish(scaledWidth, scaledHeight, isMobile);
 
       allPlants = [
         ...seaweedList.map(s => ({ ...s, plantType: 'seaweed' })),
