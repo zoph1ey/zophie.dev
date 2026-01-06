@@ -260,7 +260,7 @@ function generateFish(w, h) {
       x: x || Math.random() * w, // Fallback if no valid position found
       y: y || h * 0.1 + Math.random() * (h * 0.45),
       size: size,
-      speed: 0.2 + Math.random() * 0.4,
+      speed: 0.4 + Math.random() * 0.6, // Increased from 0.2-0.6 to 0.4-1.0
       direction: Math.random() > 0.5 ? 1 : -1,
       paletteIndex: Math.floor(Math.random() * fishPalettes.length),
       wobblePhase: Math.random() * Math.PI * 2,
@@ -273,13 +273,18 @@ function generateFish(w, h) {
   return fish;
 }
 
-export default function DitheredBackground({ isOn }) {
+export default function DitheredBackground({ isOn, activeSection }) {
   const isOnRef = useRef(isOn);
+  const activeSectionRef = useRef(activeSection);
 
-  // Update ref when isOn changes
+  // Update refs when props change
   useEffect(() => {
     isOnRef.current = isOn;
   }, [isOn]);
+
+  useEffect(() => {
+    activeSectionRef.current = activeSection;
+  }, [activeSection]);
 
   useEffect(() => {
     const canvas = document.getElementById('bayer-canvas');
@@ -370,9 +375,9 @@ export default function DitheredBackground({ isOn }) {
       const heightRatio = relYFromBottom / spriteH;
       const sway = Math.sin(time * sw.speed + sw.phase) * (3 + heightRatio * 8);
 
-      // Try rendering at original position and at wrapped positions for infinite scroll
-      // Render at -width, 0, and +width to cover both scroll directions
-      for (let offset = -scaledWidth; offset <= scaledWidth; offset += scaledWidth) {
+      // Render at multiple positions to ensure full screen coverage
+      // Render from -2*width to +2*width for complete filling
+      for (let offset = -scaledWidth * 2; offset <= scaledWidth * 2; offset += scaledWidth) {
         const adjustedX = sw.x - scrollOffset + offset;
         const swayedX = adjustedX + sway * heightRatio;
         const localX = (px - swayedX) / sw.size;
@@ -418,9 +423,9 @@ export default function DitheredBackground({ isOn }) {
       const relYFromBottom = coral.baseY - py;
       if (relYFromBottom < 0 || relYFromBottom > scaledH) return null;
 
-      // Try rendering at original position and at wrapped positions for infinite scroll
-      // Render at -width, 0, and +width to cover both scroll directions
-      for (let offset = -scaledWidth; offset <= scaledWidth; offset += scaledWidth) {
+      // Render at multiple positions to ensure full screen coverage
+      // Render from -2*width to +2*width for complete filling
+      for (let offset = -scaledWidth * 2; offset <= scaledWidth * 2; offset += scaledWidth) {
         const adjustedX = coral.x - scrollOffset + offset;
         const localX = (px - adjustedX) / coral.size;
         const localY = (spriteH - 1) - (relYFromBottom / coral.size);
@@ -524,8 +529,13 @@ export default function DitheredBackground({ isOn }) {
         fish.vx *= 0.94; // Increased from 0.92 to 0.94 (more damping)
         fish.vy *= 0.94;
 
-        // Only do independent swimming movement if NOT scrolling
-        if (!isOnRef.current) {
+        // Handle different movement modes
+        if (activeSectionRef.current) {
+          // Section slide mode: fish slide away to the left, don't regenerate
+          // Fish appear to slide left (same direction as background scroll)
+          // No wrapping - they just slide off screen
+        } else if (!isOnRef.current) {
+          // Normal mode: fish swim independently
           fish.x += fish.speed * fish.direction;
 
           const wobble = Math.sin(time * fish.wobbleSpeed + fish.wobblePhase) * 0.2;
@@ -545,10 +555,14 @@ export default function DitheredBackground({ isOn }) {
         if (fish.y < 10) fish.y = 10;
         if (fish.y > scaledHeight * 0.55) fish.y = scaledHeight * 0.55;
 
-        // Keep fish within bounds (X axis) - wrap around to prevent drifting off-screen
-        const margin = 100;
-        if (fish.x < -margin) fish.x = scaledWidth + (fish.x % scaledWidth);
-        if (fish.x > scaledWidth + margin) fish.x = fish.x % scaledWidth;
+        // Keep fish within bounds (X axis)
+        if (!activeSectionRef.current) {
+          // Normal/toggle mode: wrap around to prevent drifting off-screen
+          const margin = 100;
+          if (fish.x < -margin) fish.x = scaledWidth + (fish.x % scaledWidth);
+          if (fish.x > scaledWidth + margin) fish.x = fish.x % scaledWidth;
+        }
+        // In section slide mode: let fish slide off screen without wrapping
 
         fish.tailPhase += 0.3;
       }
@@ -558,9 +572,13 @@ export default function DitheredBackground({ isOn }) {
       for (const fish of fishList) {
         const tailWiggle = Math.sin(fish.tailPhase) * 1.5;
 
-        // Try rendering at original position and at wrapped positions for infinite scroll
-        // Render at -width, 0, and +width to cover both scroll directions
-        for (let offset = -scaledWidth; offset <= scaledWidth; offset += scaledWidth) {
+        // In section slide mode, only render fish once (no wrapping)
+        // In normal/toggle mode, render at wrapped positions for infinite scroll
+        const offsets = activeSectionRef.current
+          ? [0]  // Only render at original position
+          : [-scaledWidth, 0, scaledWidth]; // Render at wrapped positions
+
+        for (const offset of offsets) {
           const adjustedX = fish.x - scrollOffset + offset;
 
           let localX, localY;
@@ -600,13 +618,28 @@ export default function DitheredBackground({ isOn }) {
     function draw() {
       time += 0.02;
 
-      // Scroll the background when isOn is true
+      // Scroll the background when isOn is true OR when activeSection is set
       if (isOnRef.current) {
-        scrollOffset -= 0.8; // Negative = scroll from left to right
-        // Wrap scrollOffset to create infinite loop
+        // Toggle switch scrolling: left to right
+        scrollOffset -= 1.5; // Increased from 0.8
         if (scrollOffset <= -scaledWidth) {
           scrollOffset += scaledWidth;
         }
+      } else if (activeSectionRef.current) {
+        // Section slide: right to left (opposite direction) - ULTRA FAST
+        // Check if all fish are off screen (scrolled off the LEFT edge)
+        const allFishGone = fishList.every(fish => {
+          const fishW = FISH_WIDTH * fish.size;
+          // Fish slides left, so check if it's gone past the left edge
+          return (fish.x - scrollOffset) < -fishW;
+        });
+
+        if (!allFishGone) {
+          // Keep scrolling until fish are gone - 50% FASTER
+          scrollOffset += 27; // Was 18, now 27 (50% faster!)
+          // DON'T wrap around in section mode
+        }
+        // Once fish are gone, scrollOffset stops changing (corals freeze)
       }
 
       updateFish();

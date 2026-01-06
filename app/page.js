@@ -3,17 +3,35 @@ import { useState } from 'react'
 import DitheredBackground from './components/DitheredBackground'
 import AquariumBorder from './components/AquariumBorder'
 import TreasureChest from './components/TreasureChest'
+import SectionContent from './components/SectionContent'
 
-export default function Home() {  
+export default function Home() {
   const [isOn, setIsOn] = useState(false);
+  const [activeSection, setActiveSection] = useState(null); // 'about', 'projects', 'contacts', or null
+  const [selectedTreasure, setSelectedTreasure] = useState(null); // Track which treasure was clicked
+
+  const handleSectionChange = (sectionId) => {
+    setActiveSection(sectionId);
+    setSelectedTreasure(sectionId);
+  };
+
+  const handleCloseSection = () => {
+    setActiveSection(null);
+    setSelectedTreasure(null);
+  };
 
   return (
     <div className="min-h-screen w-screen overflow-x-hidden">
       {/* Dithered Background with pixel art fish */}
-      <DitheredBackground isOn={isOn} />
+      <DitheredBackground isOn={isOn} activeSection={activeSection} />
+
+      {/* Section Content - slides in from right */}
+      {activeSection && (
+        <SectionContent section={activeSection} onClose={handleCloseSection} />
+      )}
 
       {/* Treasure Chest Navigation */}
-      <TreasureChest />
+      <TreasureChest onSectionChange={handleSectionChange} selectedTreasure={selectedTreasure} />
 
       {/* Aquarium Borders - pass the state */}
       <AquariumBorder isOn={isOn} setIsOn={setIsOn} />

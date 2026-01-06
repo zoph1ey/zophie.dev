@@ -231,7 +231,7 @@ const pearlPalette = {
 const CHEST_SCALE = 6;
 const TREASURE_SCALE = 6;
 
-export default function TreasureChest() {
+export default function TreasureChest({ onSectionChange, selectedTreasure }) {
   const [isOpen, setIsOpen] = useState(false);
   const [bubbles, setBubbles] = useState([]);
   const [treasures, setTreasures] = useState([]);
@@ -239,9 +239,9 @@ export default function TreasureChest() {
   const burstDoneRef = useRef(false);
 
   const treasureConfig = [
-    { id: 'about', label: 'About Me', sprite: shellSprite, palette: shellPalette, width: 16, height: 14, href: '/about' },
-    { id: 'projects', label: 'Projects', sprite: gemSprite, palette: gemPalette, width: 14, height: 16, href: '/projects' },
-    { id: 'contacts', label: 'Contacts', sprite: pearlSprite, palette: pearlPalette, width: 12, height: 12, href: '/contacts' },
+    { id: 'about', label: 'About Me', sprite: shellSprite, palette: shellPalette, width: 16, height: 14 },
+    { id: 'projects', label: 'Projects', sprite: gemSprite, palette: gemPalette, width: 14, height: 16 },
+    { id: 'contacts', label: 'Contacts', sprite: pearlSprite, palette: pearlPalette, width: 12, height: 12 },
   ];
 
   const handleChestClick = () => {
@@ -280,17 +280,17 @@ export default function TreasureChest() {
       }));
       setTreasures(newTreasures);
       burstDoneRef.current = true;
-    }, 300);
+    }, 50); // Reduced from 300ms to 50ms - immediate treasure appearance
   };
 
-  const handleTreasureClick = (href) => {
-    window.location.href = href;
+  const handleTreasureClick = (sectionId) => {
+    onSectionChange(sectionId);
   };
 
-  // Animation loop for bubbles
+  // Animation loop for bubbles and treasures
   useEffect(() => {
     if (!isOpen) return;
-    
+
     const interval = setInterval(() => {
       setBubbles(prev => {
         let updated = prev
@@ -302,7 +302,7 @@ export default function TreasureChest() {
             opacity: b.y > 600 ? b.opacity - 0.15 : b.opacity,
           }))
           .filter(b => b.opacity > 0);
-        
+
         // Add slow continuous bubbles after burst
         if (burstDoneRef.current && Math.random() < 0.05) {
           updated.push({
@@ -315,18 +315,18 @@ export default function TreasureChest() {
             opacity: 0.7,
           });
         }
-        
+
         return updated;
       });
-      
-      // Animate treasures floating up
+
+      // Animate treasures floating up - ULTRA TINY STEPS = SILKY SMOOTH
       setTreasures(prev => prev.map(t => ({
         ...t,
-        x: t.x + (t.targetX - t.x) * 0.04,
-        y: t.y + (t.targetY - t.y) * 0.025,
+        x: t.x + (t.targetX - t.x) * 0.12, // Ultra small steps - no fragmentation
+        y: t.y + (t.targetY - t.y) * 0.12, // Ultra small steps - no fragmentation
       })));
-    }, 30); // Faster interval
-    
+    }, 4); // 250fps - ultra fast updates for maximum smoothness
+
     return () => clearInterval(interval);
   }, [isOpen]);
 
@@ -360,28 +360,40 @@ export default function TreasureChest() {
   }, [isOpen]);
 
   return (
-    <div 
+    <div
       className="fixed z-40 flex flex-col items-center"
-      style={{ 
-        bottom: isOpen ? '20px' : '40px',  // Adjust closed chest vertical position
-        left: isOpen ? '50%' : '50%',       // Adjust closed chest horizontal position
+      style={{
+        bottom: isOpen ? '20px' : '40px',
+        left: selectedTreasure ? '-100%' : '50%', // Slide chest away when treasure selected
         transform: 'translateX(-50%)',
+        transition: 'left 0.8s cubic-bezier(0.33, 1, 0.68, 1)', // Super fast, no middle lag
       }}
     >
       {/* Treasures */}
-      {treasures.map((treasure) => (
-        <div
-          key={treasure.id}
-          onClick={() => handleTreasureClick(treasure.href)}
-          className="absolute cursor-pointer transition-transform hover:scale-110 flex flex-col items-center"
-          style={{
-            left: `${treasure.x}%`,
-            bottom: `${180 - treasure.y}px`,
-            transform: `translate(-50%, 0) translateY(${Math.sin(Date.now() / 500 + treasure.bobPhase) * 8}px)`,
-            opacity: treasure.visible ? 1 : 0,
-            transition: 'opacity 0.3s',
-          }}
-        >
+      {treasures.map((treasure) => {
+        const isSelected = selectedTreasure === treasure.id;
+        const isOther = selectedTreasure && !isSelected;
+        const isFloating = !selectedTreasure && treasure.visible; // Floating up after opening
+
+        return (
+          <div
+            key={treasure.id}
+            onClick={() => handleTreasureClick(treasure.id)}
+            className="absolute cursor-pointer transition-transform hover:scale-110 flex flex-col items-center"
+            style={{
+              left: isSelected ? '50vw' : (isOther ? '-100%' : `${treasure.x}%`),
+              bottom: isSelected ? 'calc(100vh - 150px)' : (isOther ? `${180 - treasure.y}px` : `${180 - treasure.y}px`),
+              transform: isSelected
+                ? 'translate(-50%, 0)'
+                : `translate(-50%, 0) translateY(${Math.sin(Date.now() / 500 + treasure.bobPhase) * 8}px)`,
+              opacity: treasure.visible ? 1 : 0,
+              // Only use CSS transition when selected/sliding away, NOT while floating
+              transition: isFloating
+                ? 'none' // No CSS transition while floating - pure JS animation
+                : 'left 0.8s cubic-bezier(0.33, 1, 0.68, 1), bottom 0.8s cubic-bezier(0.33, 1, 0.68, 1), opacity 0.3s',
+              pointerEvents: selectedTreasure ? 'none' : 'auto', // Disable clicks when in section mode
+            }}
+          >
           <span 
             className="text-black mb-3 whitespace-nowrap pixelify-sans"
             style={{ 
@@ -417,7 +429,8 @@ export default function TreasureChest() {
             }}
           />
         </div>
-      ))}
+        );
+      })}
       
       {/* Bubbles */}
       {bubbles.map(bubble => (
