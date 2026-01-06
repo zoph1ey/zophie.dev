@@ -9,13 +9,16 @@ export default function Home() {
   const [isOn, setIsOn] = useState(false);
   const [activeSection, setActiveSection] = useState(null); // 'about', 'projects', 'contacts', or null
   const [selectedTreasure, setSelectedTreasure] = useState(null); // Track which treasure was clicked
+  const [isReturning, setIsReturning] = useState(false); // Track if we're returning to home
 
   const handleSectionChange = (sectionId) => {
     setActiveSection(sectionId);
     setSelectedTreasure(sectionId);
+    setIsReturning(false);
   };
 
   const handleCloseSection = () => {
+    setIsReturning(true);
     setActiveSection(null);
     setSelectedTreasure(null);
   };
@@ -23,7 +26,7 @@ export default function Home() {
   return (
     <div className="min-h-screen w-screen overflow-x-hidden">
       {/* Dithered Background with pixel art fish */}
-      <DitheredBackground isOn={isOn} activeSection={activeSection} />
+      <DitheredBackground isOn={isOn} activeSection={activeSection} isReturning={isReturning} onReturnComplete={() => setIsReturning(false)} />
 
       {/* Section Content - slides in from right */}
       {activeSection && (
@@ -31,7 +34,7 @@ export default function Home() {
       )}
 
       {/* Treasure Chest Navigation */}
-      <TreasureChest onSectionChange={handleSectionChange} selectedTreasure={selectedTreasure} />
+      <TreasureChest onSectionChange={handleSectionChange} selectedTreasure={selectedTreasure} onBack={handleCloseSection} />
 
       {/* Aquarium Borders - pass the state */}
       <AquariumBorder isOn={isOn} setIsOn={setIsOn} />

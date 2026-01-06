@@ -231,10 +231,11 @@ const pearlPalette = {
 const CHEST_SCALE = 6;
 const TREASURE_SCALE = 6;
 
-export default function TreasureChest({ onSectionChange, selectedTreasure }) {
+export default function TreasureChest({ onSectionChange, selectedTreasure, onBack }) {
   const [isOpen, setIsOpen] = useState(false);
   const [bubbles, setBubbles] = useState([]);
   const [treasures, setTreasures] = useState([]);
+  const [showBackButton, setShowBackButton] = useState(false);
   const canvasRef = useRef(null);
   const burstDoneRef = useRef(false);
 
@@ -286,6 +287,23 @@ export default function TreasureChest({ onSectionChange, selectedTreasure }) {
   const handleTreasureClick = (sectionId) => {
     onSectionChange(sectionId);
   };
+
+  const handleBackClick = () => {
+    setShowBackButton(false);
+    onBack();
+  };
+
+  // Show back button after slide animation completes
+  useEffect(() => {
+    if (selectedTreasure) {
+      const timer = setTimeout(() => {
+        setShowBackButton(true);
+      }, 1500); // delay
+      return () => clearTimeout(timer);
+    } else {
+      setShowBackButton(false);
+    }
+  }, [selectedTreasure]);
 
   // Animation loop for bubbles and treasures
   useEffect(() => {
@@ -360,15 +378,101 @@ export default function TreasureChest({ onSectionChange, selectedTreasure }) {
   }, [isOpen]);
 
   return (
-    <div
-      className="fixed z-40 flex flex-col items-center"
-      style={{
-        bottom: isOpen ? '20px' : '40px',
-        left: selectedTreasure ? '-100%' : '50%', // Slide chest away when treasure selected
-        transform: 'translateX(-50%)',
-        transition: 'left 0.8s cubic-bezier(0.33, 1, 0.68, 1)', // Super fast, no middle lag
-      }}
-    >
+    <>
+      {/* Back Button - appears top-left after slide animation completes */}
+      <button
+        onClick={handleBackClick}
+        className="fixed z-50 cursor-pointer"
+        style={{
+          top: '80px',
+          left: '30px',
+          opacity: showBackButton ? 1 : 0,
+          pointerEvents: showBackButton ? 'auto' : 'none',
+          transition: 'opacity 0.3s ease-in-out',
+          background: 'none',
+          border: 'none',
+          padding: '15px 25px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '10px',
+        }}
+      >
+        <span
+          style={{
+            fontFamily: '"Pixelify Sans", sans-serif',
+            fontSize: '28px',
+            fontWeight: 600,
+            color: '#000',
+            textShadow: '2px 2px 0px rgb(255, 255, 255), -1px -1px 0px rgba(255, 255, 255, 0.8)',
+          }}
+        >
+          &larr; Back
+        </span>
+      </button>
+
+      {/* Selected Treasure Header - appears at top center after slide animation */}
+      {selectedTreasure && (() => {
+        const treasure = treasureConfig.find(t => t.id === selectedTreasure);
+        if (!treasure) return null;
+        return (
+          <div
+            className="fixed z-50 flex flex-col items-center"
+            style={{
+              top: '80px',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              opacity: showBackButton ? 1 : 0,
+              transition: 'opacity 0.3s ease-in-out',
+            }}
+          >
+            <canvas
+              width={treasure.width * 4}
+              height={treasure.height * 4}
+              style={{ imageRendering: 'pixelated' }}
+              ref={el => {
+                if (el) {
+                  const ctx = el.getContext('2d');
+                  ctx.clearRect(0, 0, el.width, el.height);
+                  for (let y = 0; y < treasure.height; y++) {
+                    for (let x = 0; x < treasure.width; x++) {
+                      const pixel = treasure.sprite[y]?.[x];
+                      if (pixel && pixel > 0) {
+                        const color = treasure.palette[pixel];
+                        if (color) {
+                          ctx.fillStyle = `rgb(${color[0]}, ${color[1]}, ${color[2]})`;
+                          ctx.fillRect(x * 4, y * 4, 4, 4);
+                        }
+                      }
+                    }
+                  }
+                }
+              }}
+            />
+            <span
+              style={{
+                fontFamily: '"Pixelify Sans", sans-serif',
+                fontSize: '32px',
+                fontWeight: 600,
+                color: '#000',
+                textShadow: '2px 2px 0px rgb(255, 255, 255), -1px -1px 0px rgba(255, 255, 255, 0.8)',
+                marginTop: '1px',
+              }}
+            >
+              {treasure.label}
+            </span>
+          </div>
+        );
+      })()}
+
+      <div
+        className="fixed z-40 flex flex-col items-center"
+        style={{
+          bottom: isOpen ? '20px' : '40px',
+          left: selectedTreasure ? '-100%' : '50%', // Slide chest away when treasure selected
+          transform: 'translateX(-50%)',
+          transition: 'left 0.8s cubic-bezier(0.33, 1, 0.68, 1)', // Super fast, no middle lag
+        }}
+      >
       {/* Treasures */}
       {treasures.map((treasure) => {
         const isSelected = selectedTreasure === treasure.id;
@@ -456,7 +560,8 @@ export default function TreasureChest({ onSectionChange, selectedTreasure }) {
         className={`cursor-pointer ${!isOpen ? 'transition-transform hover:scale-105' : ''}`}
         style={{ imageRendering: 'pixelated' }}
       />
-      
-    </div>
+
+      </div>
+    </>
   );
 }

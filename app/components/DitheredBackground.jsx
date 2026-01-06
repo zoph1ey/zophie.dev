@@ -273,9 +273,11 @@ function generateFish(w, h) {
   return fish;
 }
 
-export default function DitheredBackground({ isOn, activeSection }) {
+export default function DitheredBackground({ isOn, activeSection, isReturning, onReturnComplete }) {
   const isOnRef = useRef(isOn);
   const activeSectionRef = useRef(activeSection);
+  const isReturningRef = useRef(isReturning);
+  const onReturnCompleteRef = useRef(onReturnComplete);
 
   // Update refs when props change
   useEffect(() => {
@@ -285,6 +287,14 @@ export default function DitheredBackground({ isOn, activeSection }) {
   useEffect(() => {
     activeSectionRef.current = activeSection;
   }, [activeSection]);
+
+  useEffect(() => {
+    isReturningRef.current = isReturning;
+  }, [isReturning]);
+
+  useEffect(() => {
+    onReturnCompleteRef.current = onReturnComplete;
+  }, [onReturnComplete]);
 
   useEffect(() => {
     const canvas = document.getElementById('bayer-canvas');
@@ -530,10 +540,16 @@ export default function DitheredBackground({ isOn, activeSection }) {
         fish.vy *= 0.94;
 
         // Handle different movement modes
-        if (activeSectionRef.current) {
+        if (activeSectionRef.current && !isReturningRef.current) {
           // Section slide mode: fish slide away to the left, don't regenerate
           // Fish appear to slide left (same direction as background scroll)
           // No wrapping - they just slide off screen
+        } else if (isReturningRef.current) {
+          // Return mode: fish slide back in from left, with normal swimming
+          fish.x += fish.speed * fish.direction;
+
+          const wobble = Math.sin(time * fish.wobbleSpeed + fish.wobblePhase) * 0.2;
+          fish.y += wobble;
         } else if (!isOnRef.current) {
           // Normal mode: fish swim independently
           fish.x += fish.speed * fish.direction;
@@ -556,13 +572,13 @@ export default function DitheredBackground({ isOn, activeSection }) {
         if (fish.y > scaledHeight * 0.55) fish.y = scaledHeight * 0.55;
 
         // Keep fish within bounds (X axis)
-        if (!activeSectionRef.current) {
-          // Normal/toggle mode: wrap around to prevent drifting off-screen
+        if (!activeSectionRef.current || isReturningRef.current) {
+          // Normal/toggle/return mode: wrap around to prevent drifting off-screen
           const margin = 100;
           if (fish.x < -margin) fish.x = scaledWidth + (fish.x % scaledWidth);
           if (fish.x > scaledWidth + margin) fish.x = fish.x % scaledWidth;
         }
-        // In section slide mode: let fish slide off screen without wrapping
+        // In section slide mode (not returning): let fish slide off screen without wrapping
 
         fish.tailPhase += 0.3;
       }
@@ -573,9 +589,9 @@ export default function DitheredBackground({ isOn, activeSection }) {
         const tailWiggle = Math.sin(fish.tailPhase) * 1.5;
 
         // In section slide mode, only render fish once (no wrapping)
-        // In normal/toggle mode, render at wrapped positions for infinite scroll
-        const offsets = activeSectionRef.current
-          ? [0]  // Only render at original position
+        // In normal/toggle/return mode, render at wrapped positions for infinite scroll
+        const offsets = (activeSectionRef.current && !isReturningRef.current)
+          ? [0]  // Only render at original position when in section (not returning)
           : [-scaledWidth, 0, scaledWidth]; // Render at wrapped positions
 
         for (const offset of offsets) {
@@ -624,6 +640,19 @@ export default function DitheredBackground({ isOn, activeSection }) {
         scrollOffset -= 1.5; // Increased from 0.8
         if (scrollOffset <= -scaledWidth) {
           scrollOffset += scaledWidth;
+        }
+      } else if (isReturningRef.current) {
+        // Return animation: slide from left to right (scrollOffset decreases back to 0)
+        // Use easing to sync with the 0.8s CSS transition on the treasure chest
+        if (scrollOffset > 1) {
+          // Ease-out effect: move faster at start, slower at end (matches CSS cubic-bezier)
+          scrollOffset *= 0.55;
+        } else if (scrollOffset > 0) {
+          scrollOffset = 0;
+          // Notify parent that return animation is complete
+          if (onReturnCompleteRef.current) {
+            onReturnCompleteRef.current();
+          }
         }
       } else if (activeSectionRef.current) {
         // Section slide: right to left (opposite direction) - ULTRA FAST
