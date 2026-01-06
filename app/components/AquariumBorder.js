@@ -3,8 +3,7 @@
 import { useState, useEffect } from 'react';
 import { bayerMatrix } from './constants';
 
-export default function AquariumBorder() {
-  const [isOn, setIsOn] = useState(false);
+export default function AquariumBorder({ isOn, setIsOn }) {
 
   useEffect(() => {
     const topCanvas = document.getElementById('top-border-canvas');

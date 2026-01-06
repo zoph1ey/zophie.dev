@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { bayerMatrix } from './constants';
 
 const SCALE = 2.5;
@@ -227,8 +227,8 @@ function generateCorals(w, h) {
 
 function generateFish(w, h) {
   const fish = [];
-  const numFish = 8 + Math.floor(Math.random() * 6);
-  
+  const numFish = 10 + Math.floor(Math.random() * 7); // Increased by ~20% (was 8-13, now 10-16)
+
   for (let i = 0; i < numFish; i++) {
     const size = 2 + Math.random() * 2;
     fish.push({
@@ -248,7 +248,14 @@ function generateFish(w, h) {
   return fish;
 }
 
-export default function DitheredBackground() {
+export default function DitheredBackground({ isOn }) {
+  const isOnRef = useRef(isOn);
+
+  // Update ref when isOn changes
+  useEffect(() => {
+    isOnRef.current = isOn;
+  }, [isOn]);
+
   useEffect(() => {
     const canvas = document.getElementById('bayer-canvas');
     if (!canvas) return;
@@ -266,6 +273,7 @@ export default function DitheredBackground() {
     let scaledWidth = 0;
     let scaledHeight = 0;
     let time = 0;
+    let scrollOffset = 0;
 
     function resize() {
       canvas.width = window.innerWidth;
@@ -288,7 +296,7 @@ export default function DitheredBackground() {
         x: e.clientX / SCALE,
         y: e.clientY / SCALE,
         radius: 0,
-        maxRadius: 50,
+        maxRadius: 80, // Increased from 50 to 80 for larger effect area
         speed: 5,
         strength: 1
       });
@@ -304,7 +312,7 @@ export default function DitheredBackground() {
           x: e.clientX / SCALE,
           y: e.clientY / SCALE,
           radius: 0,
-          maxRadius: 40,
+          maxRadius: 60, // Increased from 40 to 60 for larger hover effect
           speed: 4,
           strength: 1
         });
@@ -328,39 +336,44 @@ export default function DitheredBackground() {
       }
     }
 
-    function getSeaweedPixelSingle(px, py, time, sw) {
+    function getSeaweedPixelSingle(px, py, time, sw, scrollOffset) {
       const spriteH = SEAWEED_HEIGHT * sw.size;
-      
+
       const relYFromBottom = sw.baseY - py;
       if (relYFromBottom < 0 || relYFromBottom > spriteH) return null;
-      
+
       const heightRatio = relYFromBottom / spriteH;
       const sway = Math.sin(time * sw.speed + sw.phase) * (3 + heightRatio * 8);
-      
-      const swayedX = sw.x + sway * heightRatio;
-      const localX = (px - swayedX) / sw.size;
-      const localY = (SEAWEED_HEIGHT - 1) - (relYFromBottom / sw.size);
-      
-      const spriteX = Math.floor(localX + SEAWEED_WIDTH / 2);
-      const spriteY = Math.floor(localY);
-      
-      if (spriteX >= 0 && spriteX < SEAWEED_WIDTH && spriteY >= 0 && spriteY < SEAWEED_HEIGHT) {
-        const pixelType = seaweedSprite[spriteY][spriteX];
-        if (pixelType > 0) {
-          const palette = seaweedPalettes[sw.paletteIndex];
-          switch (pixelType) {
-            case 1: return palette.dark;
-            case 2: return palette.mid;
-            case 3: return palette.light;
+
+      // Try rendering at original position and at wrapped positions for infinite scroll
+      // Render at -width, 0, and +width to cover both scroll directions
+      for (let offset = -scaledWidth; offset <= scaledWidth; offset += scaledWidth) {
+        const adjustedX = sw.x - scrollOffset + offset;
+        const swayedX = adjustedX + sway * heightRatio;
+        const localX = (px - swayedX) / sw.size;
+        const localY = (SEAWEED_HEIGHT - 1) - (relYFromBottom / sw.size);
+
+        const spriteX = Math.floor(localX + SEAWEED_WIDTH / 2);
+        const spriteY = Math.floor(localY);
+
+        if (spriteX >= 0 && spriteX < SEAWEED_WIDTH && spriteY >= 0 && spriteY < SEAWEED_HEIGHT) {
+          const pixelType = seaweedSprite[spriteY][spriteX];
+          if (pixelType > 0) {
+            const palette = seaweedPalettes[sw.paletteIndex];
+            switch (pixelType) {
+              case 1: return palette.dark;
+              case 2: return palette.mid;
+              case 3: return palette.light;
+            }
           }
         }
       }
       return null;
     }
 
-    function getCoralPixelSingle(px, py, coral) {
+    function getCoralPixelSingle(px, py, coral, scrollOffset) {
       let sprite, spriteW, spriteH;
-      
+
       if (coral.type === 'round') {
         sprite = roundCoralSprite;
         spriteW = ROUND_CORAL_WIDTH;
@@ -374,41 +387,46 @@ export default function DitheredBackground() {
         spriteW = TUBE_CORAL_WIDTH;
         spriteH = TUBE_CORAL_HEIGHT;
       }
-      
+
       const scaledH = spriteH * coral.size;
-      
+
       const relYFromBottom = coral.baseY - py;
       if (relYFromBottom < 0 || relYFromBottom > scaledH) return null;
-      
-      const localX = (px - coral.x) / coral.size;
-      const localY = (spriteH - 1) - (relYFromBottom / coral.size);
-      
-      const spriteX = Math.floor(localX + spriteW / 2);
-      const spriteY = Math.floor(localY);
-      
-      if (spriteX >= 0 && spriteX < spriteW && spriteY >= 0 && spriteY < spriteH) {
-        const pixelType = sprite[spriteY][spriteX];
-        if (pixelType > 0) {
-          const palette = coralPalettes[coral.paletteIndex];
-          switch (pixelType) {
-            case 1: return palette.dark;
-            case 2: return palette.mid;
-            case 3: return palette.light;
-            case 4: return palette.highlight;
+
+      // Try rendering at original position and at wrapped positions for infinite scroll
+      // Render at -width, 0, and +width to cover both scroll directions
+      for (let offset = -scaledWidth; offset <= scaledWidth; offset += scaledWidth) {
+        const adjustedX = coral.x - scrollOffset + offset;
+        const localX = (px - adjustedX) / coral.size;
+        const localY = (spriteH - 1) - (relYFromBottom / coral.size);
+
+        const spriteX = Math.floor(localX + spriteW / 2);
+        const spriteY = Math.floor(localY);
+
+        if (spriteX >= 0 && spriteX < spriteW && spriteY >= 0 && spriteY < spriteH) {
+          const pixelType = sprite[spriteY][spriteX];
+          if (pixelType > 0) {
+            const palette = coralPalettes[coral.paletteIndex];
+            switch (pixelType) {
+              case 1: return palette.dark;
+              case 2: return palette.mid;
+              case 3: return palette.light;
+              case 4: return palette.highlight;
+            }
           }
         }
       }
       return null;
     }
 
-    function getPlantPixel(px, py, time) {
+    function getPlantPixel(px, py, time, scrollOffset) {
       let color = null;
       for (const plant of allPlants) {
         let c = null;
         if (plant.plantType === 'seaweed') {
-          c = getSeaweedPixelSingle(px, py, time, plant);
+          c = getSeaweedPixelSingle(px, py, time, plant, scrollOffset);
         } else {
-          c = getCoralPixelSingle(px, py, plant);
+          c = getCoralPixelSingle(px, py, plant, scrollOffset);
         }
         if (c) {
           color = c;
@@ -419,84 +437,101 @@ export default function DitheredBackground() {
 
     function updateFish() {
       for (const fish of fishList) {
+        // Apply ripple forces from clicks
         for (const ripple of ripples) {
           const dx = fish.x - ripple.x;
           const dy = fish.y - ripple.y;
           const dist = Math.sqrt(dx * dx + dy * dy);
-          
+
           if (dist < ripple.maxRadius && dist > 0) {
-            const force = (1 - dist / ripple.maxRadius) * ripple.strength * 0.5;
+            const force = (1 - dist / ripple.maxRadius) * ripple.strength * 1.2; // Increased from 0.5 to 1.2
             fish.vx += (dx / dist) * force;
             fish.vy += (dy / dist) * force;
           }
         }
-        
+
+        // Apply ripple forces from mouse trails
         for (const ripple of trailRipples) {
           const dx = fish.x - ripple.x;
           const dy = fish.y - ripple.y;
           const dist = Math.sqrt(dx * dx + dy * dy);
-          
+
           if (dist < ripple.maxRadius && dist > 0) {
-            const force = (1 - dist / ripple.maxRadius) * ripple.strength * 0.3;
+            const force = (1 - dist / ripple.maxRadius) * ripple.strength * 0.8; // Increased from 0.3 to 0.8
             fish.vx += (dx / dist) * force;
             fish.vy += (dy / dist) * force;
           }
         }
-        
-        fish.x += fish.speed * fish.direction + fish.vx;
+
+        // Apply velocities from ripples (ALWAYS, even when scrolling)
+        fish.x += fish.vx;
         fish.y += fish.vy;
-        
-        fish.vx *= 0.95;
-        fish.vy *= 0.95;
-        
-        fish.tailPhase += 0.3;
-        const wobble = Math.sin(time * fish.wobbleSpeed + fish.wobblePhase) * 0.2;
-        fish.y += wobble;
-        
+
+        // Apply damping (less damping = fish move further)
+        fish.vx *= 0.92; // Changed from 0.95 to 0.92 (less damping)
+        fish.vy *= 0.92;
+
+        // Only do independent swimming movement if NOT scrolling
+        if (!isOnRef.current) {
+          fish.x += fish.speed * fish.direction;
+
+          const wobble = Math.sin(time * fish.wobbleSpeed + fish.wobblePhase) * 0.2;
+          fish.y += wobble;
+
+          const fishW = FISH_WIDTH * fish.size;
+          if (fish.direction === 1 && fish.x > scaledWidth + fishW) {
+            fish.x = -fishW;
+            fish.y = scaledHeight * 0.1 + Math.random() * (scaledHeight * 0.45);
+          } else if (fish.direction === -1 && fish.x < -fishW) {
+            fish.x = scaledWidth + fishW;
+            fish.y = scaledHeight * 0.1 + Math.random() * (scaledHeight * 0.45);
+          }
+        }
+
+        // Keep fish within bounds
         if (fish.y < 10) fish.y = 10;
         if (fish.y > scaledHeight * 0.55) fish.y = scaledHeight * 0.55;
-        
-        const fishW = FISH_WIDTH * fish.size;
-        if (fish.direction === 1 && fish.x > scaledWidth + fishW) {
-          fish.x = -fishW;
-          fish.y = scaledHeight * 0.1 + Math.random() * (scaledHeight * 0.45);
-        } else if (fish.direction === -1 && fish.x < -fishW) {
-          fish.x = scaledWidth + fishW;
-          fish.y = scaledHeight * 0.1 + Math.random() * (scaledHeight * 0.45);
-        }
+
+        fish.tailPhase += 0.3;
       }
     }
 
-    function getFishPixel(px, py) {
+    function getFishPixel(px, py, scrollOffset) {
       for (const fish of fishList) {
         const tailWiggle = Math.sin(fish.tailPhase) * 1.5;
-        
-        let localX, localY;
-        if (fish.direction === 1) {
-          localX = (px - fish.x) / fish.size;
-          localY = (py - fish.y) / fish.size;
-        } else {
-          localX = (FISH_WIDTH - 1) - ((px - fish.x) / fish.size);
-          localY = (py - fish.y) / fish.size;
-        }
-        
-        if (localX < 6) {
-          localY -= tailWiggle * (1 - localX / 6);
-        }
-        
-        const spriteX = Math.floor(localX);
-        const spriteY = Math.floor(localY);
-        
-        if (spriteX >= 0 && spriteX < FISH_WIDTH && spriteY >= 0 && spriteY < FISH_HEIGHT) {
-          const pixelType = fishSprite[spriteY][spriteX];
-          if (pixelType > 0) {
-            const palette = fishPalettes[fish.paletteIndex];
-            switch (pixelType) {
-              case 1: return palette.body;
-              case 2: return palette.bodyDark;
-              case 3: return palette.bodyLight;
-              case 4: return palette.eyeWhite;
-              case 5: return palette.pupil;
+
+        // Try rendering at original position and at wrapped positions for infinite scroll
+        // Render at -width, 0, and +width to cover both scroll directions
+        for (let offset = -scaledWidth; offset <= scaledWidth; offset += scaledWidth) {
+          const adjustedX = fish.x - scrollOffset + offset;
+
+          let localX, localY;
+          if (fish.direction === 1) {
+            localX = (px - adjustedX) / fish.size;
+            localY = (py - fish.y) / fish.size;
+          } else {
+            localX = (FISH_WIDTH - 1) - ((px - adjustedX) / fish.size);
+            localY = (py - fish.y) / fish.size;
+          }
+
+          if (localX < 6) {
+            localY -= tailWiggle * (1 - localX / 6);
+          }
+
+          const spriteX = Math.floor(localX);
+          const spriteY = Math.floor(localY);
+
+          if (spriteX >= 0 && spriteX < FISH_WIDTH && spriteY >= 0 && spriteY < FISH_HEIGHT) {
+            const pixelType = fishSprite[spriteY][spriteX];
+            if (pixelType > 0) {
+              const palette = fishPalettes[fish.paletteIndex];
+              switch (pixelType) {
+                case 1: return palette.body;
+                case 2: return palette.bodyDark;
+                case 3: return palette.bodyLight;
+                case 4: return palette.eyeWhite;
+                case 5: return palette.pupil;
+              }
             }
           }
         }
@@ -506,6 +541,16 @@ export default function DitheredBackground() {
 
     function draw() {
       time += 0.02;
+
+      // Scroll the background when isOn is true
+      if (isOnRef.current) {
+        scrollOffset -= 0.8; // Negative = scroll from left to right
+        // Wrap scrollOffset to create infinite loop
+        if (scrollOffset <= -scaledWidth) {
+          scrollOffset += scaledWidth;
+        }
+      }
+
       updateFish();
       
       const imageData = ctx.createImageData(scaledWidth, scaledHeight);
@@ -530,7 +575,7 @@ export default function DitheredBackground() {
         for (let x = 0; x < scaledWidth; x++) {
           const i = (y * scaledWidth + x) * 4;
           
-          const fishColor = getFishPixel(x, y);
+          const fishColor = getFishPixel(x, y, scrollOffset);
           if (fishColor) {
             data[i] = fishColor[0];
             data[i + 1] = fishColor[1];
@@ -538,8 +583,8 @@ export default function DitheredBackground() {
             data[i + 3] = 255;
             continue;
           }
-          
-          const plantColor = getPlantPixel(x, y, time);
+
+          const plantColor = getPlantPixel(x, y, time, scrollOffset);
           if (plantColor) {
             data[i] = plantColor[0];
             data[i + 1] = plantColor[1];
@@ -613,7 +658,7 @@ export default function DitheredBackground() {
       window.removeEventListener('chestOpened', handleChestOpened);
       if (animationId) cancelAnimationFrame(animationId);
     };
-  }, []);
+  }, []); // Empty dependency array - only run once on mount
 
   return (
     <canvas
