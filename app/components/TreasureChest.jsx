@@ -401,7 +401,7 @@ export default function TreasureChest({ onSectionChange, selectedTreasure, onBac
           backdropFilter: 'blur(8px)',
           WebkitBackdropFilter: 'blur(8px)',
           opacity: selectedTreasure ? 1 : 0,
-          transition: isMobile ? 'opacity 0.5s ease-in-out' : 'opacity 2.0s ease-in-out',
+          transition: isMobile ? 'opacity 1.0s ease-in-out' : 'opacity 2.0s ease-in-out',
         }}
       />
 
@@ -630,9 +630,7 @@ export default function TreasureChest({ onSectionChange, selectedTreasure, onBac
           bottom: isOpen ? '20px' : '40px',
           left: selectedTreasure ? '-100%' : '50%', // Slide chest away when treasure selected
           transform: 'translateX(-50%)',
-          transition: isMobile
-            ? 'left 1.0s cubic-bezier(0.33, 1, 0.68, 1)'
-            : 'left 0.8s cubic-bezier(0.33, 1, 0.68, 1)',
+          transition: 'left 0.8s cubic-bezier(0.33, 1, 0.68, 1)', // Super fast, no middle lag
         }}
       >
       {/* Treasures */}
@@ -656,9 +654,7 @@ export default function TreasureChest({ onSectionChange, selectedTreasure, onBac
               // Only use CSS transition when selected/sliding away, NOT while floating
               transition: isFloating
                 ? 'none' // No CSS transition while floating - pure JS animation
-                : isMobile
-                  ? 'left 1.0s cubic-bezier(0.33, 1, 0.68, 1), bottom 1.0s cubic-bezier(0.33, 1, 0.68, 1), opacity 0.3s'
-                  : 'left 0.8s cubic-bezier(0.33, 1, 0.68, 1), bottom 0.8s cubic-bezier(0.33, 1, 0.68, 1), opacity 0.3s',
+                : 'left 0.8s cubic-bezier(0.33, 1, 0.68, 1), bottom 0.8s cubic-bezier(0.33, 1, 0.68, 1), opacity 0.3s',
               pointerEvents: selectedTreasure ? 'none' : 'auto', // Disable clicks when in section mode
             }}
           >
