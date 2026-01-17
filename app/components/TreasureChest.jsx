@@ -357,7 +357,7 @@ export default function TreasureChest({ onSectionChange, selectedTreasure, onBac
         x: t.x + (t.targetX - t.x) * 0.12, // Ultra small steps - no fragmentation
         y: t.y + (t.targetY - t.y) * 0.12, // Ultra small steps - no fragmentation
       })));
-    }, 4); // 250fps - ultra fast updates for maximum smoothness
+    }, 16); // 60fps - smooth updates without excessive CPU usage
 
     return () => clearInterval(interval);
   }, [isOpen]);

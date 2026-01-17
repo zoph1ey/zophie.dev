@@ -393,9 +393,8 @@ export default function DitheredBackground({ isOn, activeSection, isReturning, o
       const heightRatio = relYFromBottom / spriteH;
       const sway = Math.sin(time * sw.speed + sw.phase) * (3 + heightRatio * 8);
 
-      // Render at multiple positions to ensure full screen coverage
-      // Render from -2*width to +2*width for complete filling
-      for (let offset = -scaledWidth * 2; offset <= scaledWidth * 2; offset += scaledWidth) {
+      // Check only -1, 0, +1 screen widths for wrapping
+      for (let offset = -scaledWidth; offset <= scaledWidth; offset += scaledWidth) {
         const adjustedX = sw.x - scrollOffset + offset;
         const swayedX = adjustedX + sway * heightRatio;
         const localX = (px - swayedX) / sw.size;
