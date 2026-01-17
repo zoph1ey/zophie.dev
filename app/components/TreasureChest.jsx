@@ -291,7 +291,7 @@ export default function TreasureChest({ onSectionChange, selectedTreasure, onBac
           }}
         >
           {selectedTreasure === 'about' && <AboutSection isMobile={isMobile} />}
-          {selectedTreasure === 'projects' && <ProjectsSection />}
+          {selectedTreasure === 'projects' && <ProjectsSection isMobile={isMobile} />}
           {selectedTreasure === 'contacts' && <ContactsSection isMobile={isMobile} />}
         </div>
       )}
