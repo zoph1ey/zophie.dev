@@ -2,283 +2,27 @@
 
 import { useEffect, useRef } from 'react';
 import { bayerMatrix } from './constants';
+import {
+  fishSprite,
+  seaweedSprite,
+  roundCoralSprite,
+  fanCoralSprite,
+  tubeCoralSprite,
+  FISH_WIDTH,
+  FISH_HEIGHT,
+  SEAWEED_WIDTH,
+  SEAWEED_HEIGHT,
+  ROUND_CORAL_WIDTH,
+  ROUND_CORAL_HEIGHT,
+  FAN_CORAL_WIDTH,
+  FAN_CORAL_HEIGHT,
+  TUBE_CORAL_WIDTH,
+  TUBE_CORAL_HEIGHT,
+} from './sprites/aquaticSprites';
+import { seaweedPalettes, coralPalettes, fishPalettes } from './palettes/aquaticPalettes';
+import { generateSeaweed, generateCorals, generateFish } from './utils/aquaticGenerators';
 
 const SCALE = 2.5;
-
-const fishSprite = [
-  [0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0],
-  [0, 0, 0, 0, 0, 0, 2, 0, 0, 2, 1, 1, 2, 0, 0, 0, 0, 0],
-  [0, 0, 0, 2, 0, 0, 0, 0, 0, 2, 1, 1, 1, 2, 0, 0, 0, 0],
-  [0, 0, 0, 2, 2, 0, 0, 0, 2, 1, 2, 2, 2, 1, 2, 0, 0, 0],
-  [0, 0, 0, 2, 1, 2, 0, 2, 1, 1, 1, 1, 1, 1, 3, 2, 2, 0],
-  [0, 0, 0, 0, 2, 1, 2, 1, 3, 3, 3, 3, 3, 3, 5, 4, 3, 2],
-  [0, 0, 0, 0, 2, 1, 1, 3, 3, 3, 3, 3, 1, 3, 5, 5, 3, 2],
-  [0, 0, 0, 0, 2, 1, 2, 1, 3, 3, 3, 3, 1, 3, 3, 3, 3, 2],
-  [0, 0, 0, 2, 1, 2, 0, 2, 1, 1, 1, 1, 1, 1, 3, 2, 2, 0],
-  [0, 0, 0, 2, 2, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0],
-  [0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 2, 1, 1, 2, 0, 0, 0, 0],
-  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 0, 0, 0, 0, 0],
-  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 0, 0, 0, 0, 0, 0],
-  [0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0],
-  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-];
-
-const seaweedSprite = [
-  [0, 0, 1, 2, 0],
-  [0, 1, 2, 3, 0],
-  [0, 1, 2, 0, 0],
-  [1, 2, 3, 0, 0],
-  [1, 2, 0, 0, 0],
-  [1, 2, 3, 0, 0],
-  [0, 1, 2, 0, 0],
-  [0, 1, 2, 3, 0],
-  [0, 0, 1, 2, 0],
-  [0, 1, 2, 3, 0],
-  [0, 1, 2, 0, 0],
-  [1, 2, 0, 0, 0],
-  [1, 2, 3, 0, 0],
-  [0, 1, 2, 0, 0],
-  [0, 1, 2, 3, 0],
-  [0, 0, 1, 2, 0],
-  [0, 1, 2, 3, 0],
-  [0, 1, 2, 0, 0],
-  [1, 2, 0, 0, 0],
-  [1, 2, 3, 0, 0],
-  [0, 1, 2, 0, 0],
-  [0, 1, 2, 3, 0],
-  [0, 0, 1, 2, 0],
-  [0, 1, 2, 3, 0],
-  [0, 1, 2, 0, 0],
-  [1, 2, 0, 0, 0],
-  [1, 2, 3, 0, 0],
-  [0, 1, 2, 0, 0],
-  [0, 1, 2, 3, 0],
-  [0, 0, 1, 2, 0],
-  [0, 1, 2, 3, 0],
-  [0, 0, 1, 2, 0],
-];
-
-const roundCoralSprite = [
-  [0, 0, 0, 0, 2, 3, 3, 2, 0, 0, 0, 0],
-  [0, 0, 2, 3, 3, 4, 4, 3, 3, 2, 0, 0],
-  [0, 2, 3, 4, 3, 3, 3, 3, 4, 3, 2, 0],
-  [0, 2, 3, 3, 2, 3, 3, 2, 3, 3, 2, 0],
-  [1, 2, 3, 2, 3, 4, 4, 3, 2, 3, 2, 1],
-  [1, 2, 3, 3, 3, 3, 3, 3, 3, 3, 2, 1],
-  [1, 2, 2, 3, 4, 3, 3, 4, 3, 2, 2, 1],
-  [0, 1, 2, 3, 3, 4, 4, 3, 3, 2, 1, 0],
-  [0, 2, 3, 4, 3, 3, 3, 3, 4, 3, 2, 0],
-  [1, 2, 3, 3, 2, 3, 3, 2, 3, 3, 2, 1],
-  [1, 2, 3, 2, 3, 4, 4, 3, 2, 3, 2, 1],
-  [1, 2, 3, 3, 3, 3, 3, 3, 3, 3, 2, 1],
-  [1, 2, 2, 3, 4, 3, 3, 4, 3, 2, 2, 1],
-  [0, 1, 2, 3, 3, 3, 3, 3, 3, 2, 1, 0],
-  [0, 1, 2, 2, 3, 4, 4, 3, 2, 2, 1, 0],
-  [0, 0, 1, 2, 3, 3, 3, 3, 2, 1, 0, 0],
-  [0, 0, 1, 2, 2, 3, 3, 2, 2, 1, 0, 0],
-  [0, 0, 0, 1, 2, 2, 2, 2, 1, 0, 0, 0],
-  [0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0],
-  [0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0],
-];
-
-const fanCoralSprite = [
-  [0, 0, 0, 0, 0, 0, 2, 3, 0, 0, 0, 0, 0, 0],
-  [0, 0, 0, 0, 2, 3, 2, 3, 2, 3, 0, 0, 0, 0],
-  [0, 0, 0, 2, 3, 2, 1, 2, 3, 2, 3, 0, 0, 0],
-  [0, 0, 2, 3, 2, 0, 1, 2, 0, 3, 2, 3, 0, 0],
-  [0, 2, 3, 2, 0, 0, 1, 2, 0, 0, 3, 2, 3, 0],
-  [0, 3, 2, 0, 2, 3, 1, 2, 2, 3, 0, 3, 2, 0],
-  [2, 3, 0, 2, 3, 2, 1, 2, 3, 2, 3, 0, 3, 2],
-  [3, 2, 0, 3, 2, 0, 1, 2, 0, 3, 2, 0, 2, 3],
-  [0, 0, 2, 3, 0, 0, 1, 2, 0, 0, 3, 2, 0, 0],
-  [0, 2, 3, 2, 3, 0, 1, 2, 0, 2, 3, 2, 3, 0],
-  [2, 3, 0, 3, 2, 0, 1, 2, 0, 3, 2, 0, 3, 2],
-  [3, 2, 0, 0, 3, 2, 1, 2, 3, 2, 0, 0, 2, 3],
-  [0, 0, 2, 3, 0, 3, 1, 2, 2, 0, 3, 2, 0, 0],
-  [0, 2, 3, 2, 0, 0, 1, 2, 0, 0, 3, 2, 3, 0],
-  [2, 3, 0, 3, 2, 0, 1, 2, 0, 3, 2, 0, 3, 2],
-  [3, 2, 0, 2, 3, 0, 1, 2, 0, 2, 3, 0, 2, 3],
-  [0, 0, 2, 3, 2, 0, 1, 2, 0, 3, 2, 3, 0, 0],
-  [0, 0, 3, 2, 3, 0, 1, 2, 0, 2, 3, 2, 0, 0],
-  [0, 0, 0, 3, 2, 0, 1, 2, 0, 3, 2, 0, 0, 0],
-  [0, 0, 0, 0, 3, 2, 1, 2, 3, 2, 0, 0, 0, 0],
-  [0, 0, 0, 0, 0, 3, 1, 2, 2, 0, 0, 0, 0, 0],
-  [0, 0, 0, 0, 0, 0, 1, 2, 0, 0, 0, 0, 0, 0],
-  [0, 0, 0, 0, 0, 0, 1, 2, 0, 0, 0, 0, 0, 0],
-  [0, 0, 0, 0, 0, 0, 1, 2, 0, 0, 0, 0, 0, 0],
-  [0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0],
-  [0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0],
-  [0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0],
-  [0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0],
-  [0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0],
-  [0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0],
-  [0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0],
-  [0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0],
-];
-
-const tubeCoralSprite = [
-  [0, 0, 2, 3, 3, 2, 0, 0],
-  [0, 2, 3, 4, 4, 3, 2, 0],
-  [0, 2, 3, 3, 3, 3, 2, 0],
-  [0, 1, 2, 3, 3, 2, 1, 0],
-  [0, 1, 2, 2, 2, 2, 1, 0],
-  [0, 1, 2, 3, 3, 2, 1, 0],
-  [0, 1, 2, 2, 2, 2, 1, 0],
-  [0, 1, 2, 3, 3, 2, 1, 0],
-  [0, 1, 2, 2, 2, 2, 1, 0],
-  [0, 1, 2, 3, 3, 2, 1, 0],
-  [0, 1, 2, 2, 2, 2, 1, 0],
-  [0, 1, 2, 3, 3, 2, 1, 0],
-  [0, 1, 2, 2, 2, 2, 1, 0],
-  [0, 1, 2, 3, 3, 2, 1, 0],
-  [0, 1, 2, 2, 2, 2, 1, 0],
-  [0, 1, 2, 3, 3, 2, 1, 0],
-  [0, 1, 2, 2, 2, 2, 1, 0],
-  [0, 1, 2, 3, 3, 2, 1, 0],
-  [0, 1, 2, 2, 2, 2, 1, 0],
-  [0, 1, 2, 3, 3, 2, 1, 0],
-  [0, 1, 2, 2, 2, 2, 1, 0],
-  [0, 1, 2, 2, 2, 2, 1, 0],
-  [0, 1, 2, 2, 2, 2, 1, 0],
-  [0, 1, 2, 2, 2, 2, 1, 0],
-  [0, 0, 1, 2, 2, 1, 0, 0],
-  [0, 0, 1, 1, 1, 1, 0, 0],
-  [0, 0, 0, 1, 1, 0, 0, 0],
-  [0, 0, 0, 1, 1, 0, 0, 0],
-];
-
-const seaweedPalettes = [
-  { dark: [60, 140, 100], mid: [90, 180, 130], light: [140, 210, 170] },
-  { dark: [50, 130, 120], mid: [80, 170, 155], light: [130, 205, 190] },
-  { dark: [70, 145, 90], mid: [100, 185, 120], light: [150, 215, 165] },
-];
-
-const coralPalettes = [
-  { dark: [255, 80, 130], mid: [255, 130, 170], light: [255, 180, 200], highlight: [255, 215, 230] },
-  { dark: [255, 120, 50], mid: [255, 160, 100], light: [255, 200, 150], highlight: [255, 230, 200] },
-  { dark: [180, 80, 220], mid: [210, 130, 255], light: [230, 175, 255], highlight: [245, 210, 255] },
-  { dark: [0, 200, 220], mid: [80, 230, 245], light: [150, 245, 255], highlight: [200, 255, 255] },
-  { dark: [255, 70, 90], mid: [255, 120, 130], light: [255, 170, 175], highlight: [255, 210, 215] },
-  { dark: [255, 200, 0], mid: [255, 225, 80], light: [255, 240, 140], highlight: [255, 250, 190] },
-];
-
-const fishPalettes = [
-  { body: [255, 116, 36], bodyDark: [128, 80, 3], bodyLight: [255, 177, 163], eyeWhite: [255, 255, 255], pupil: [20, 20, 40] },
-  { body: [240, 34, 140], bodyDark: [145, 9, 52], bodyLight: [252, 149, 182], eyeWhite: [255, 255, 255], pupil: [20, 20, 40] },
-  { body: [0, 220, 220], bodyDark: [0, 160, 180], bodyLight: [100, 255, 255], eyeWhite: [255, 255, 255], pupil: [20, 20, 40] },
-  { body: [63, 242, 206], bodyDark: [28, 107, 91], bodyLight: [167, 250, 223], eyeWhite: [255, 255, 255], pupil: [20, 20, 40] },
-  { body: [17, 104, 191], bodyDark: [8, 14, 120], bodyLight: [143, 195, 247], eyeWhite: [255, 255, 255], pupil: [20, 20, 40] },
-  { body: [62, 153, 54], bodyDark: [15, 59, 11], bodyLight: [173, 227, 168], eyeWhite: [255, 255, 255], pupil: [20, 20, 40] },
-  { body: [101, 34, 189], bodyDark: [37, 6, 79], bodyLight: [163, 121, 219], eyeWhite: [255, 255, 255], pupil: [20, 20, 40] },
-  { body: [255, 209, 56], bodyDark: [214, 76, 6], bodyLight: [255, 229, 181], eyeWhite: [255, 255, 255], pupil: [20, 20, 40] },
-];
-
-const FISH_WIDTH = 18;
-const FISH_HEIGHT = 16;
-const SEAWEED_WIDTH = 5;
-const SEAWEED_HEIGHT = 32;
-const ROUND_CORAL_WIDTH = 12;
-const ROUND_CORAL_HEIGHT = 20;
-const FAN_CORAL_WIDTH = 14;
-const FAN_CORAL_HEIGHT = 32;
-const TUBE_CORAL_WIDTH = 8;
-const TUBE_CORAL_HEIGHT = 28;
-
-function generateSeaweed(w, h) {
-  const seaweed = [];
-  const num = Math.floor(w / 25);
-  
-  for (let i = 0; i < num; i++) {
-    const size = 2.5 + Math.random() * 2.5;
-    seaweed.push({
-      x: (i * (w / num)) + Math.random() * 15 - 7,
-      baseY: h,
-      size: size,
-      paletteIndex: Math.floor(Math.random() * seaweedPalettes.length),
-      phase: Math.random() * Math.PI * 2,
-      speed: 0.5 + Math.random() * 0.5,
-      layer: Math.random(),
-    });
-  }
-  return seaweed;
-}
-
-function generateCorals(w, h) {
-  const corals = [];
-  const num = Math.floor(w / 50);
-  
-  for (let i = 0; i < num; i++) {
-    const types = ['round', 'fan', 'tube'];
-    const type = types[Math.floor(Math.random() * types.length)];
-    const size = 2 + Math.random() * 2;
-    
-    corals.push({
-      x: (i * (w / num)) + Math.random() * 35 - 17,
-      baseY: h,
-      type: type,
-      size: size,
-      paletteIndex: Math.floor(Math.random() * coralPalettes.length),
-      layer: Math.random(),
-    });
-  }
-  return corals;
-}
-
-function generateFish(w, h, isMobile) {
-  const fish = [];
-  // Mobile: 5-8 fish (50% less), Desktop: 10-16 fish
-  const numFish = isMobile
-    ? 5 + Math.floor(Math.random() * 4)
-    : 10 + Math.floor(Math.random() * 7);
-  const minDistance = 100; // Minimum distance between fish to prevent clustering
-
-  for (let i = 0; i < numFish; i++) {
-    let attempts = 0;
-    let validPosition = false;
-    let x, y;
-
-    // Try to find a position that's far enough from other fish
-    while (!validPosition && attempts < 50) {
-      x = Math.random() * w;
-      y = h * 0.1 + Math.random() * (h * 0.45);
-
-      validPosition = true;
-      // Check distance from all existing fish
-      for (const otherFish of fish) {
-        const dx = x - otherFish.x;
-        const dy = y - otherFish.y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-
-        if (dist < minDistance) {
-          validPosition = false;
-          break;
-        }
-      }
-      attempts++;
-    }
-
-    const size = 2 + Math.random() * 2;
-    // Desktop: 50% faster (0.6-1.5), Mobile: original speed (0.4-1.0)
-    const speed = isMobile
-      ? 0.4 + Math.random() * 0.6
-      : 0.6 + Math.random() * 0.9;
-    fish.push({
-      x: x || Math.random() * w, // Fallback if no valid position found
-      y: y || h * 0.1 + Math.random() * (h * 0.45),
-      size: size,
-      speed: speed,
-      direction: Math.random() > 0.5 ? 1 : -1,
-      paletteIndex: Math.floor(Math.random() * fishPalettes.length),
-      wobblePhase: Math.random() * Math.PI * 2,
-      wobbleSpeed: 1.5 + Math.random() * 1.5,
-      tailPhase: Math.random() * Math.PI * 2,
-      vx: 0,
-      vy: 0,
-    });
-  }
-  return fish;
-}
 
 export default function DitheredBackground({ isOn, activeSection, isReturning, onReturnComplete }) {
   const isOnRef = useRef(isOn);
@@ -344,7 +88,7 @@ export default function DitheredBackground({ isOn, activeSection, isReturning, o
         x: e.clientX / SCALE,
         y: e.clientY / SCALE,
         radius: 0,
-        maxRadius: 64, // Reduced from 80 to 64 (20% less area)
+        maxRadius: 64,
         speed: 5,
         strength: 1
       });
@@ -354,13 +98,13 @@ export default function DitheredBackground({ isOn, activeSection, isReturning, o
       const dx = e.clientX - lastMouseX;
       const dy = e.clientY - lastMouseY;
       const distance = Math.sqrt(dx * dx + dy * dy);
-      
+
       if (distance > 8) {
         trailRipples.push({
           x: e.clientX / SCALE,
           y: e.clientY / SCALE,
           radius: 0,
-          maxRadius: 48, // Reduced from 60 to 48 (20% less area)
+          maxRadius: 48,
           speed: 4,
           strength: 1
         });
@@ -369,12 +113,10 @@ export default function DitheredBackground({ isOn, activeSection, isReturning, o
       }
     }
 
-    // Listen for chest opening to scatter fish
     function handleChestOpened() {
       for (const fish of fishList) {
         const centerX = scaledWidth / 2;
-        
-        // Very minimal movement
+
         if (fish.x < centerX) {
           fish.vx -= 1.5;
         } else {
@@ -393,7 +135,6 @@ export default function DitheredBackground({ isOn, activeSection, isReturning, o
       const heightRatio = relYFromBottom / spriteH;
       const sway = Math.sin(time * sw.speed + sw.phase) * (3 + heightRatio * 8);
 
-      // Check only -1, 0, +1 screen widths for wrapping
       for (let offset = -scaledWidth; offset <= scaledWidth; offset += scaledWidth) {
         const adjustedX = sw.x - scrollOffset + offset;
         const swayedX = adjustedX + sway * heightRatio;
@@ -440,8 +181,6 @@ export default function DitheredBackground({ isOn, activeSection, isReturning, o
       const relYFromBottom = coral.baseY - py;
       if (relYFromBottom < 0 || relYFromBottom > scaledH) return null;
 
-      // Render at multiple positions to ensure full screen coverage
-      // Render from -2*width to +2*width for complete filling
       for (let offset = -scaledWidth * 2; offset <= scaledWidth * 2; offset += scaledWidth) {
         const adjustedX = coral.x - scrollOffset + offset;
         const localX = (px - adjustedX) / coral.size;
@@ -486,7 +225,6 @@ export default function DitheredBackground({ isOn, activeSection, isReturning, o
       for (const fish of fishList) {
         // Apply ripple forces from clicks
         for (const ripple of ripples) {
-          // Check distance from all rendered positions (accounting for wraparound)
           let minDist = Infinity;
           let bestDx = 0;
           let bestDy = 0;
@@ -505,7 +243,7 @@ export default function DitheredBackground({ isOn, activeSection, isReturning, o
           }
 
           if (minDist < ripple.maxRadius && minDist > 0) {
-            const force = (1 - minDist / ripple.maxRadius) * ripple.strength * 0.96; // Reduced from 1.2 to 0.96 (20% less)
+            const force = (1 - minDist / ripple.maxRadius) * ripple.strength * 0.96;
             fish.vx += (bestDx / minDist) * force;
             fish.vy += (bestDy / minDist) * force;
           }
@@ -513,7 +251,6 @@ export default function DitheredBackground({ isOn, activeSection, isReturning, o
 
         // Apply ripple forces from mouse trails
         for (const ripple of trailRipples) {
-          // Check distance from all rendered positions (accounting for wraparound)
           let minDist = Infinity;
           let bestDx = 0;
           let bestDy = 0;
@@ -532,35 +269,29 @@ export default function DitheredBackground({ isOn, activeSection, isReturning, o
           }
 
           if (minDist < ripple.maxRadius && minDist > 0) {
-            const force = (1 - minDist / ripple.maxRadius) * ripple.strength * 0.64; // Reduced from 0.8 to 0.64 (20% less)
+            const force = (1 - minDist / ripple.maxRadius) * ripple.strength * 0.64;
             fish.vx += (bestDx / minDist) * force;
             fish.vy += (bestDy / minDist) * force;
           }
         }
 
-        // Apply velocities from ripples (ALWAYS, even when scrolling)
+        // Apply velocities from ripples
         fish.x += fish.vx;
         fish.y += fish.vy;
 
-        // Apply damping (more damping = fish move less)
-        fish.vx *= 0.94; // Increased from 0.92 to 0.94 (more damping)
+        // Apply damping
+        fish.vx *= 0.94;
         fish.vy *= 0.94;
 
         // Handle different movement modes
         if (activeSectionRef.current && !isReturningRef.current) {
-          // Section slide mode: fish slide away to the left, don't regenerate
-          // Fish appear to slide left (same direction as background scroll)
-          // No wrapping - they just slide off screen
+          // Section slide mode: fish slide away to the left
         } else if (isReturningRef.current) {
-          // Return mode: fish slide back in from left, with normal swimming
           fish.x += fish.speed * fish.direction;
-
           const wobble = Math.sin(time * fish.wobbleSpeed + fish.wobblePhase) * 0.2;
           fish.y += wobble;
         } else if (!isOnRef.current) {
-          // Normal mode: fish swim independently
           fish.x += fish.speed * fish.direction;
-
           const wobble = Math.sin(time * fish.wobbleSpeed + fish.wobblePhase) * 0.2;
           fish.y += wobble;
 
@@ -580,12 +311,10 @@ export default function DitheredBackground({ isOn, activeSection, isReturning, o
 
         // Keep fish within bounds (X axis)
         if (!activeSectionRef.current || isReturningRef.current) {
-          // Normal/toggle/return mode: wrap around to prevent drifting off-screen
           const margin = 100;
           if (fish.x < -margin) fish.x = scaledWidth + (fish.x % scaledWidth);
           if (fish.x > scaledWidth + margin) fish.x = fish.x % scaledWidth;
         }
-        // In section slide mode (not returning): let fish slide off screen without wrapping
 
         fish.tailPhase += 0.3;
       }
@@ -595,11 +324,9 @@ export default function DitheredBackground({ isOn, activeSection, isReturning, o
       for (const fish of fishList) {
         const tailWiggle = Math.sin(fish.tailPhase) * 1.5;
 
-        // In section slide mode, only render fish once (no wrapping)
-        // In normal/toggle/return mode, render at wrapped positions for infinite scroll
         const offsets = (activeSectionRef.current && !isReturningRef.current)
-          ? [0]  // Only render at original position when in section (not returning)
-          : [-scaledWidth, 0, scaledWidth]; // Render at wrapped positions
+          ? [0]
+          : [-scaledWidth, 0, scaledWidth];
 
         for (const offset of offsets) {
           const adjustedX = fish.x - scrollOffset + offset;
@@ -641,48 +368,36 @@ export default function DitheredBackground({ isOn, activeSection, isReturning, o
     function draw() {
       time += 0.02;
 
-      // Scroll the background when isOn is true OR when activeSection is set
       if (isOnRef.current) {
-        // Toggle switch scrolling: left to right
-        scrollOffset -= 1.5; // Increased from 0.8
+        scrollOffset -= 1.5;
         if (scrollOffset <= -scaledWidth) {
           scrollOffset += scaledWidth;
         }
       } else if (isReturningRef.current) {
-        // Return animation: slide from left to right (scrollOffset decreases back to 0)
-        // Use easing to sync with the 0.8s CSS transition on the treasure chest
         if (scrollOffset > 1) {
-          // Ease-out effect: move faster at start, slower at end (matches CSS cubic-bezier)
           scrollOffset *= 0.55;
         } else if (scrollOffset > 0) {
           scrollOffset = 0;
-          // Notify parent that return animation is complete
           if (onReturnCompleteRef.current) {
             onReturnCompleteRef.current();
           }
         }
       } else if (activeSectionRef.current) {
-        // Section slide: right to left (opposite direction) - ULTRA FAST
-        // Check if all fish are off screen (scrolled off the LEFT edge)
         const allFishGone = fishList.every(fish => {
           const fishW = FISH_WIDTH * fish.size;
-          // Fish slides left, so check if it's gone past the left edge
           return (fish.x - scrollOffset) < -fishW;
         });
 
         if (!allFishGone) {
-          // Keep scrolling until fish are gone - 50% FASTER
-          scrollOffset += 27; // Was 18, now 27 (50% faster!)
-          // DON'T wrap around in section mode
+          scrollOffset += 27;
         }
-        // Once fish are gone, scrollOffset stops changing (corals freeze)
       }
 
       updateFish();
-      
+
       const imageData = ctx.createImageData(scaledWidth, scaledHeight);
       const data = imageData.data;
-      
+
       const centerX = scaledWidth / 2;
       const centerY = scaledHeight / 2;
 
@@ -701,7 +416,7 @@ export default function DitheredBackground({ isOn, activeSection, isReturning, o
       for (let y = 0; y < scaledHeight; y++) {
         for (let x = 0; x < scaledWidth; x++) {
           const i = (y * scaledWidth + x) * 4;
-          
+
           const fishColor = getFishPixel(x, y, scrollOffset);
           if (fishColor) {
             data[i] = fishColor[0];
@@ -719,12 +434,12 @@ export default function DitheredBackground({ isOn, activeSection, isReturning, o
             data[i + 3] = 255;
             continue;
           }
-          
+
           const dx = (x - centerX) / scaledWidth;
           const dy = (y - centerY) / scaledHeight;
           const distance = Math.sqrt(dx * dx + dy * dy);
           let pattern = Math.sin(distance * 8) * 0.5 + 0.5;
-          
+
           for (const ripple of ripples) {
             const rdx = x - ripple.x;
             const rdy = y - ripple.y;
@@ -746,11 +461,11 @@ export default function DitheredBackground({ isOn, activeSection, isReturning, o
               pattern += wave * 0.25 * fadeFactor;
             }
           }
-          
+
           const gradientValue = pattern * 0.6 + 0.2;
           const threshold = bayerMatrix[y % 8][x % 8] / 64;
           const isDark = gradientValue < threshold;
-          
+
           if (isDark) {
             data[i] = 37;
             data[i + 1] = 99;
@@ -767,7 +482,7 @@ export default function DitheredBackground({ isOn, activeSection, isReturning, o
       ctx.putImageData(imageData, 0, 0);
       ctx.imageSmoothingEnabled = false;
       ctx.drawImage(canvas, 0, 0, scaledWidth, scaledHeight, 0, 0, canvas.width, canvas.height);
-      
+
       animationId = requestAnimationFrame(draw);
     }
 
@@ -785,7 +500,7 @@ export default function DitheredBackground({ isOn, activeSection, isReturning, o
       window.removeEventListener('chestOpened', handleChestOpened);
       if (animationId) cancelAnimationFrame(animationId);
     };
-  }, []); // Empty dependency array - only run once on mount
+  }, []);
 
   return (
     <canvas

@@ -1,235 +1,24 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { chestClosedSprite, chestOpenSprite, shellSprite, gemSprite, pearlSprite } from './sprites/treasureSprites';
+import { chestPalette, shellPalette, gemPalette, pearlPalette, CHEST_SCALE, TREASURE_SCALE } from './palettes/treasurePalettes';
+import { AboutSection, ProjectsSection, ContactsSection } from './sections';
 
-const fontLink = typeof document !== 'undefined' && (() => {
-    const link = document.createElement('link');
-    link.href = 'https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;500;600;700&display=swap';
-    link.rel = 'stylesheet';
-    document.head.appendChild(link);
-  })();
+// Load Pixelify Sans font
+if (typeof document !== 'undefined') {
+  const link = document.createElement('link');
+  link.href = 'https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;500;600;700&display=swap';
+  link.rel = 'stylesheet';
+  document.head.appendChild(link);
+}
 
-// Treasure chest sprite (closed) - 32x20 pixels
-const chestClosedSprite = [
-  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,4,3,1,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,1,4,3,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,4,3,1,5,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,5,1,4,3,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,4,3,1,7,7,8,8,8,8,7,7,7,7,7,8,8,8,8,8,8,8,8,7,7,1,4,3,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,4,3,1,5,5,5,6,6,6,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,1,4,3,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,3,3,1,5,5,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,5,1,4,3,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,3,3,1,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,1,3,3,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,4,4,4,4,4,4,4,4,4,4,1,4,1,3,1,4,1,4,4,4,4,4,3,3,3,3,3,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,4,1,1,1,3,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,3,3,1,5,5,5,5,5,5,5,1,1,1,3,1,1,1,5,5,5,5,5,5,5,1,3,3,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,4,3,1,5,6,6,6,6,6,6,5,5,1,1,1,5,5,5,6,6,6,5,5,5,1,4,3,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,4,3,1,7,7,8,8,8,8,8,8,8,7,7,7,7,8,8,8,8,8,7,7,7,1,4,3,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,4,3,1,5,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,5,5,1,4,3,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,4,3,1,5,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,5,5,5,5,1,4,3,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,4,3,1,7,7,8,8,8,8,8,8,8,8,8,8,8,8,8,7,7,7,7,7,7,1,4,3,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,4,3,1,5,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,5,5,1,3,3,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,3,3,1,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,1,3,3,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,4,3,3,1,1,1,3,3,4,4,4,4,4,4,4,4,4,4,4,4,4,3,3,3,3,3,3,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+// Treasure configuration
+const treasureConfig = [
+  { id: 'about', label: 'About Me', sprite: shellSprite, palette: shellPalette, width: 16, height: 14 },
+  { id: 'projects', label: 'Projects', sprite: gemSprite, palette: gemPalette, width: 14, height: 16 },
+  { id: 'contacts', label: 'Contacts', sprite: pearlSprite, palette: pearlPalette, width: 12, height: 12 },
 ];
-
-// Treasure chest sprite (open) - 64x36 pixels
-const chestOpenSprite = [
-  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,4,3,3,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,2,2,2,2,2,2,2,2,2,2,2,2,1,1,1,2,2,2,2,2,2,2,2,2,2,2,2,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1,1,1,2,2,2,2,2,2,2,2,2,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,2,2,2,2,2,2,2,2,2,2,2,2,1,1,1,14,14,15,1,2,2,2,2,2,2,2,2,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,2,1,1,1,2,2,2,2,2,1,1,1,9,10,1,16,16,1,1,1,1,2,2,2,2,2,2,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,11,11,10,1,2,1,1,1,9,9,11,10,10,9,1,1,1,9,9,9,1,2,2,2,2,2,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,9,9,9,10,11,10,1,1,10,1,9,9,11,9,10,10,11,11,11,10,9,11,1,2,2,2,2,2,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,11,10,9,9,11,9,9,9,9,9,1,10,10,9,9,9,9,9,11,10,11,9,9,10,11,1,1,2,2,2,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,9,11,10,9,9,9,9,10,10,9,11,10,9,9,9,9,10,10,10,9,9,9,9,9,9,10,9,9,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,11,11,11,11,10,9,10,10,10,10,9,11,9,11,11,10,10,9,11,11,11,11,11,9,9,10,11,11,11,10,9,9,1,0,0,0,0,0,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,9,10,10,10,10,9,10,11,11,11,10,11,11,11,11,11,10,11,11,11,11,11,11,11,11,9,11,9,9,10,10,9,9,1,0,0,0,0,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,9,11,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,9,11,1,0,0,0,0,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,9,10,11,1,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,3,3,3,3,3,1,10,9,1,0,0,0,0,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,9,10,9,1,1,1,1,1,1,1,1,1,1,1,3,4,4,1,3,3,3,1,1,1,1,1,1,1,1,1,1,1,9,10,1,0,0,0,0,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,11,10,1,3,3,1,5,5,5,5,5,5,5,1,1,4,3,3,1,1,5,5,5,5,5,5,5,1,3,3,1,11,11,1,0,0,0,0,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,9,10,1,4,3,1,5,6,6,6,6,6,6,5,5,1,1,1,5,5,5,6,6,6,5,5,5,1,4,3,1,9,10,1,0,0,0,0,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,9,11,1,4,3,1,7,7,8,8,8,8,8,8,8,7,7,7,7,8,8,8,8,8,7,7,7,1,4,3,1,11,11,9,1,0,0,0,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,10,9,9,1,4,3,1,5,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,5,5,1,4,3,1,10,9,10,9,1,0,0,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,0,0,1,1,0,0,1,1,0,1,10,11,1,4,3,1,5,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,5,5,5,5,1,4,3,1,9,10,11,1,0,0,1,1,1,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,0,0,1,9,1,1,12,12,1,11,9,10,1,4,3,1,7,7,8,8,8,8,8,8,8,8,8,8,8,8,8,7,7,7,7,7,7,1,4,3,1,9,11,11,1,0,1,20,21,1,0,0,0,0,0,0],
-  [0,0,0,0,0,1,1,0,0,1,1,10,9,9,1,13,1,9,9,11,1,4,3,1,5,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,5,5,1,3,3,1,10,9,1,0,1,1,1,22,1,0,0,0,0,0,0],
-  [0,0,0,0,1,9,10,1,1,9,10,11,1,1,0,1,10,10,9,11,1,3,3,1,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,1,3,3,1,10,9,11,1,9,10,9,1,1,0,0,0,0,0,0],
-  [0,0,0,0,1,1,1,0,0,1,1,1,0,0,0,1,9,10,10,11,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,9,9,9,10,9,9,10,9,11,1,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,9,9,10,1,1,1,4,3,3,1,1,1,3,3,4,4,4,4,4,4,4,4,4,4,4,4,4,3,3,3,3,3,3,1,1,1,1,9,10,11,1,1,10,1,1,1,1,0,0],
-  [1,1,0,0,0,0,0,0,0,0,1,1,0,0,1,1,1,1,0,0,1,1,1,1,9,9,9,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,1,1,1,0,0,1,10,9,10,1,0,0],
-  [1,9,1,0,0,0,0,0,0,1,9,10,1,0,0,0,0,0,0,0,0,1,9,10,10,9,10,10,1,9,10,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0],
-  [1,10,9,1,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,1,9,9,10,11,1,0,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-  [0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,9,10,1,1,1,0,0,0,0,0,1,1,1,0,0,0,0,1,9,9,10,10,11,9,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0],
-  [0,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,1,17,18,19,1,0,0,0,0,1,1,1,1,1,1,11,1,1,0,0,0,0,0,0,0,0,0,0,1,1,11,10,1],
-  [0,0,0,0,0,0,0,1,14,15,16,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,18,19,19,19,1,0,0,0,0,0,0,0,0,0,0,1,9,10,1,0,0,0,0,0,0,0,0,1,9,9,11,1,1],
-  [0,0,0,0,0,0,0,1,16,16,16,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0],
-  [0,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-];
-
-// Shell sprite for "About Me" - 16x14
-const shellSprite = [
-  [0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0],
-  [0,0,0,1,1,3,4,4,4,4,3,1,1,0,0,0],
-  [0,0,1,4,1,3,4,4,4,3,2,1,4,1,0,0],
-  [0,1,3,4,2,1,2,3,4,4,1,3,4,4,1,0],
-  [1,1,3,4,2,1,2,3,4,4,1,3,3,3,1,1],
-  [1,3,1,3,4,2,1,2,3,1,3,3,2,1,4,1],
-  [1,2,4,1,4,2,1,2,3,1,3,4,1,4,2,1],
-  [0,1,2,4,3,3,4,4,4,2,4,3,3,2,1,0],
-  [0,0,1,2,4,3,3,3,3,3,3,3,2,1,0,0],
-  [0,0,0,1,2,4,3,4,3,4,3,2,1,0,0,0],
-  [1,1,1,2,1,2,4,4,4,4,2,1,2,1,1,1],
-  [1,4,4,3,2,1,2,3,3,2,1,2,3,3,4,1],
-  [1,1,3,3,3,2,1,1,1,1,2,2,3,3,1,1],
-  [0,0,1,1,1,1,1,1,1,1,1,1,1,1,0,0],
-];
-
-// Gem sprite for "Projects" - 14x16
-const gemSprite = [
-  [0,0,0,0,0,0,1,1,0,0,0,0,0,0],
-  [0,0,0,0,0,1,2,2,1,0,0,0,0,0],
-  [0,0,0,0,1,2,3,3,2,1,0,0,0,0],
-  [0,0,0,1,2,3,4,4,3,2,1,0,0,0],
-  [0,0,1,2,3,4,4,4,4,3,2,1,0,0],
-  [0,1,2,3,4,4,5,5,4,4,3,2,1,0],
-  [1,2,3,4,4,5,5,5,5,4,4,3,2,1],
-  [1,2,3,4,5,5,5,5,5,5,4,3,2,1],
-  [0,1,2,3,4,5,5,5,5,4,3,2,1,0],
-  [0,0,1,2,3,4,5,5,4,3,2,1,0,0],
-  [0,0,0,1,2,3,4,4,3,2,1,0,0,0],
-  [0,0,0,0,1,2,3,3,2,1,0,0,0,0],
-  [0,0,0,0,0,1,2,2,1,0,0,0,0,0],
-  [0,0,0,0,0,0,1,1,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-];
-
-// Pearl sprite for "Contacts" - 12x12
-const pearlSprite = [
-  [0,0,0,0,1,1,1,1,0,0,0,0],
-  [0,0,1,1,2,2,2,2,1,1,0,0],
-  [0,1,2,3,3,3,3,3,3,2,1,0],
-  [0,1,2,3,4,4,4,4,3,2,1,0],
-  [1,2,3,4,4,5,5,4,4,3,2,1],
-  [1,2,3,4,5,5,5,5,4,3,2,1],
-  [1,2,3,4,5,5,5,5,4,3,2,1],
-  [1,2,3,4,4,5,5,4,4,3,2,1],
-  [0,1,2,3,4,4,4,4,3,2,1,0],
-  [0,1,2,3,3,3,3,3,3,2,1,0],
-  [0,0,1,1,2,2,2,2,1,1,0,0],
-  [0,0,0,0,1,1,1,1,0,0,0,0],
-];
-
-// Color palettes
-
-const chestPalette = {
-
-// 1: black
-// 2: dark brown (inside chest)
-// 3: dark cream (chest edge)
-// 4: light cream (chest edge)
-
-  1: [0, 0, 0],
-  2: [71, 44, 4],
-  3: [163, 148, 98],
-  4: [219, 206, 162],
-
-// 5: brown (wood)
-// 6: light brown (wood)
-// 7: dark brown (connecting wood)
-// 8: medium dark brown (connecting wood)
-
-  5: [186, 118, 50],
-  6: [232, 165, 97],
-  7: [107, 73, 37],
-  8: [153, 107, 58],
-
-// 9: light gold (gold)
-// 10: gold (gold)
-// 11: dark gold (gold)
-
-  9: [255, 251, 145],
-  10: [186, 180, 28],
-  11: [143, 121, 10],
-
-// 12: red (treasure)
-// 13: dark red (treasure)
-
-  12: [255, 64, 64],
-  13: [166, 18, 18],
-
-// 14: light green (treasure)
-// 15: green (treasure)
-// 16: dark green (treasure)
-
-  14: [237, 255, 237],
-  15: [168, 230, 168],
-  16: [33, 158, 33],
-
-// 17: light purple (treasure)
-// 18: purple (treasure)
-// 19: dark purple (treasure)
-
-  17: [249, 217, 255],
-  18: [217, 122, 235],
-  19: [112, 33, 128],
-
-// 20: light blue (treasure)
-// 21: blue (treasure)
-// 22: dark blue (treasure)
-
-  20: [207, 231, 255],
-  21: [90, 161, 232],
-  22: [31, 92, 153],
-
-};
-
-const shellPalette = {
-  1: [138, 62, 64],
-  2: [232, 149, 141],
-  3: [251, 202, 189],
-  4: [254, 235, 212],
-};
-
-const gemPalette = {
-  1: [80, 40, 120],
-  2: [120, 60, 180],
-  3: [160, 100, 220],
-  4: [200, 150, 255],
-  5: [230, 200, 255],
-};
-
-const pearlPalette = {
-  1: [180, 180, 190],
-  2: [210, 210, 220],
-  3: [235, 235, 245],
-  4: [250, 250, 255],
-  5: [255, 255, 255],
-};
-
-const CHEST_SCALE = 6;
-const TREASURE_SCALE = 6;
 
 export default function TreasureChest({ onSectionChange, selectedTreasure, onBack }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -248,23 +37,17 @@ export default function TreasureChest({ onSectionChange, selectedTreasure, onBac
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  const treasureConfig = [
-    { id: 'about', label: 'About Me', sprite: shellSprite, palette: shellPalette, width: 16, height: 14 },
-    { id: 'projects', label: 'Projects', sprite: gemSprite, palette: gemPalette, width: 14, height: 16 },
-    { id: 'contacts', label: 'Contacts', sprite: pearlSprite, palette: pearlPalette, width: 12, height: 12 },
-  ];
-
   const handleChestClick = () => {
     if (isOpen) return;
-    
+
     setIsOpen(true);
     burstDoneRef.current = false;
-    
+
     window.dispatchEvent(new CustomEvent('chestOpened'));
-    
+
     // Create initial burst of bubbles - fewer bubbles
     const burstBubbles = [];
-    for (let i = 0; i < 10; i++) {  // Reduced from 30 to 10
+    for (let i = 0; i < 10; i++) {
       burstBubbles.push({
         id: Math.random(),
         x: 50 + Math.random() * 40 - 20,
@@ -276,10 +59,10 @@ export default function TreasureChest({ onSectionChange, selectedTreasure, onBac
       });
     }
     setBubbles(burstBubbles);
-    
+
     setTimeout(() => {
       // On mobile, position treasures closer together so all are visible
-      const mobilePositions = [20, 50, 80]; // About, Projects, Contacts
+      const mobilePositions = [20, 50, 80];
       const desktopPositions = [-40, 50, 140];
       const positions = isMobile ? mobilePositions : desktopPositions;
 
@@ -288,14 +71,14 @@ export default function TreasureChest({ onSectionChange, selectedTreasure, onBac
         x: 50,
         targetX: positions[index],
         y: 50,
-        targetY: isMobile ? -180 : -200, // Slightly higher on mobile
+        targetY: isMobile ? -180 : -200,
         bobPhase: Math.random() * Math.PI * 2,
         visible: true,
         scale: TREASURE_SCALE,
       }));
       setTreasures(newTreasures);
       burstDoneRef.current = true;
-    }, 50); // Reduced from 300ms to 50ms - immediate treasure appearance
+    }, 50);
   };
 
   const handleTreasureClick = (sectionId) => {
@@ -312,7 +95,7 @@ export default function TreasureChest({ onSectionChange, selectedTreasure, onBac
     if (selectedTreasure) {
       const timer = setTimeout(() => {
         setShowBackButton(true);
-      }, isMobile ? 300 : 1500); // 1 second faster on mobile
+      }, isMobile ? 300 : 1500);
       return () => clearTimeout(timer);
     } else {
       setShowBackButton(false);
@@ -328,9 +111,8 @@ export default function TreasureChest({ onSectionChange, selectedTreasure, onBac
         let updated = prev
           .map(b => ({
             ...b,
-            y: b.y + b.speed, // Move up (y increases = goes up in our coordinate system)
+            y: b.y + b.speed,
             x: b.x + Math.sin(b.wobble + b.y * 0.03) * 0.5,
-            // Pop when reaching top (y > window height basically)
             opacity: b.y > 600 ? b.opacity - 0.15 : b.opacity,
           }))
           .filter(b => b.opacity > 0);
@@ -351,13 +133,13 @@ export default function TreasureChest({ onSectionChange, selectedTreasure, onBac
         return updated;
       });
 
-      // Animate treasures floating up - ULTRA TINY STEPS = SILKY SMOOTH
+      // Animate treasures floating up
       setTreasures(prev => prev.map(t => ({
         ...t,
-        x: t.x + (t.targetX - t.x) * 0.12, // Ultra small steps - no fragmentation
-        y: t.y + (t.targetY - t.y) * 0.12, // Ultra small steps - no fragmentation
+        x: t.x + (t.targetX - t.x) * 0.12,
+        y: t.y + (t.targetY - t.y) * 0.12,
       })));
-    }, 16); // 60fps - smooth updates without excessive CPU usage
+    }, 16);
 
     return () => clearInterval(interval);
   }, [isOpen]);
@@ -366,17 +148,17 @@ export default function TreasureChest({ onSectionChange, selectedTreasure, onBac
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    
+
     const ctx = canvas.getContext('2d');
     const sprite = isOpen ? chestOpenSprite : chestClosedSprite;
     const spriteHeight = isOpen ? 36 : 32;
-    
+
     const spriteWidth = 64;
     canvas.width = spriteWidth * CHEST_SCALE;
     canvas.height = spriteHeight * CHEST_SCALE;
-    
+
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
+
     for (let y = 0; y < spriteHeight; y++) {
       for (let x = 0; x < spriteWidth; x++) {
         const pixel = sprite[y]?.[x];
@@ -391,9 +173,28 @@ export default function TreasureChest({ onSectionChange, selectedTreasure, onBac
     }
   }, [isOpen]);
 
+  // Render treasure sprite on canvas
+  const renderTreasureCanvas = (el, treasure) => {
+    if (!el) return;
+    const ctx = el.getContext('2d');
+    ctx.clearRect(0, 0, el.width, el.height);
+    for (let y = 0; y < treasure.height; y++) {
+      for (let x = 0; x < treasure.width; x++) {
+        const pixel = treasure.sprite[y]?.[x];
+        if (pixel && pixel > 0) {
+          const color = treasure.palette[pixel];
+          if (color) {
+            ctx.fillStyle = `rgb(${color[0]}, ${color[1]}, ${color[2]})`;
+            ctx.fillRect(x * 4, y * 4, 4, 4);
+          }
+        }
+      }
+    }
+  };
+
   return (
     <>
-      {/* Frosted Glass Overlay - fades in when treasure is selected */}
+      {/* Frosted Glass Overlay */}
       <div
         className="fixed inset-0 z-30 pointer-events-none"
         style={{
@@ -405,7 +206,7 @@ export default function TreasureChest({ onSectionChange, selectedTreasure, onBac
         }}
       />
 
-      {/* Back Button - appears top-left after slide animation completes */}
+      {/* Back Button */}
       <button
         onClick={handleBackClick}
         className="fixed z-50 cursor-pointer"
@@ -436,7 +237,7 @@ export default function TreasureChest({ onSectionChange, selectedTreasure, onBac
         </span>
       </button>
 
-      {/* Selected Treasure Header - appears at top center after slide animation */}
+      {/* Selected Treasure Header */}
       {selectedTreasure && (() => {
         const treasure = treasureConfig.find(t => t.id === selectedTreasure);
         if (!treasure) return null;
@@ -455,24 +256,7 @@ export default function TreasureChest({ onSectionChange, selectedTreasure, onBac
               width={treasure.width * 4}
               height={treasure.height * 4}
               style={{ imageRendering: 'pixelated' }}
-              ref={el => {
-                if (el) {
-                  const ctx = el.getContext('2d');
-                  ctx.clearRect(0, 0, el.width, el.height);
-                  for (let y = 0; y < treasure.height; y++) {
-                    for (let x = 0; x < treasure.width; x++) {
-                      const pixel = treasure.sprite[y]?.[x];
-                      if (pixel && pixel > 0) {
-                        const color = treasure.palette[pixel];
-                        if (color) {
-                          ctx.fillStyle = `rgb(${color[0]}, ${color[1]}, ${color[2]})`;
-                          ctx.fillRect(x * 4, y * 4, 4, 4);
-                        }
-                      }
-                    }
-                  }
-                }
-              }}
+              ref={el => renderTreasureCanvas(el, treasure)}
             />
             <span
               style={{
@@ -490,7 +274,7 @@ export default function TreasureChest({ onSectionChange, selectedTreasure, onBac
         );
       })()}
 
-      {/* Section Content - appears in center of screen */}
+      {/* Section Content */}
       {selectedTreasure && (
         <div
           className="fixed z-40 flex flex-col items-center justify-center"
@@ -506,121 +290,9 @@ export default function TreasureChest({ onSectionChange, selectedTreasure, onBac
             padding: isMobile ? '15px 20px' : '20px',
           }}
         >
-          {selectedTreasure === 'about' && (
-            <p
-              style={{
-                fontFamily: '"Pixelify Sans", sans-serif',
-                fontSize: isMobile ? '16px' : '20px',
-                fontWeight: 400,
-                color: '#000',
-                lineHeight: 1.6,
-              }}
-            >
-              <span style={{ display: 'block', marginBottom: '12px' }}>Hi, I'm Nurfarahana !</span>
-              <span style={{ display: 'block', marginBottom: '12px' }}>Final year Computer Science student at Taylor's University, specializing in AI and Data Science.</span>
-              <span style={{ display: 'block', marginBottom: '12px' }}>I'm drawn to Machine Learning, Neural Networks, and UI/UX.</span>
-              <span style={{ display: 'block', marginBottom: '12px' }}>I like building things that are both intelligent and well-designed.</span>
-              <span style={{ display: 'block', marginBottom: '12px' }}>Outside of tech, I play piano, violin, and omnichord. I also enjoy theatre, video games, and anything creative.</span>
-              <span style={{ display: 'block' }}>Currently open to opportunities in AI, ML, Data Science, or Frontend Development.</span>
-            </p>
-          )}
-
-          {selectedTreasure === 'projects' && (
-            <p
-              style={{
-                fontFamily: '"Pixelify Sans", sans-serif',
-                fontSize: '20px',
-                fontWeight: 400,
-                color: '#000',
-                lineHeight: 1.6,
-              }}
-            >
-              Projects coming soon...
-            </p>
-          )}
-
-          {selectedTreasure === 'contacts' && (
-            <div
-              style={{
-                fontFamily: '"Pixelify Sans", sans-serif',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: isMobile ? '25px' : '50px',
-              }}
-            >
-              <p
-                style={{
-                  fontSize: isMobile ? '28px' : '40px',
-                  fontWeight: 600,
-                  color: '#000',
-                  textShadow: '2px 2px 0px rgb(255, 255, 255), -1px -1px 0px rgba(255, 255, 255, 0.8)',
-                  margin: 0,
-                }}
-              >
-                Let's Connect
-              </p>
-              <div
-                style={{
-                  display: 'flex',
-                  flexDirection: isMobile ? 'column' : 'row',
-                  alignItems: 'center',
-                  gap: isMobile ? '20px' : '50px',
-                  fontSize: isMobile ? '18px' : '30px',
-                }}
-              >
-                <a
-                  href="https://www.linkedin.com/in/nurfarahanarosli/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{
-                    color: '#000',
-                    textDecoration: 'none',
-                    transition: 'opacity 0.2s',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                  }}
-                  onMouseEnter={(e) => e.currentTarget.style.opacity = '0.6'}
-                  onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
-                >
-                  <span>💼</span> LinkedIn
-                </a>
-                <a
-                  href="mailto:hello.nurfarahana@gmail.com"
-                  style={{
-                    color: '#000',
-                    textDecoration: 'none',
-                    transition: 'opacity 0.2s',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                  }}
-                  onMouseEnter={(e) => e.currentTarget.style.opacity = '0.6'}
-                  onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
-                >
-                  <span>📧</span> hello.nurfarahana@gmail.com
-                </a>
-                <a
-                  href="/Nurfarahana_Resume.pdf"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{
-                    color: '#000',
-                    textDecoration: 'none',
-                    transition: 'opacity 0.2s',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                  }}
-                  onMouseEnter={(e) => e.currentTarget.style.opacity = '0.6'}
-                  onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
-                >
-                  <span>📄</span> Resume
-                </a>
-              </div>
-            </div>
-          )}
+          {selectedTreasure === 'about' && <AboutSection isMobile={isMobile} />}
+          {selectedTreasure === 'projects' && <ProjectsSection />}
+          {selectedTreasure === 'contacts' && <ContactsSection isMobile={isMobile} />}
         </div>
       )}
 
@@ -628,99 +300,97 @@ export default function TreasureChest({ onSectionChange, selectedTreasure, onBac
         className="fixed z-40 flex flex-col items-center"
         style={{
           bottom: isOpen ? '20px' : '40px',
-          left: selectedTreasure ? '-100%' : '50%', // Slide chest away when treasure selected
+          left: selectedTreasure ? '-100%' : '50%',
           transform: 'translateX(-50%)',
-          transition: 'left 0.8s cubic-bezier(0.33, 1, 0.68, 1)', // Super fast, no middle lag
+          transition: 'left 0.8s cubic-bezier(0.33, 1, 0.68, 1)',
         }}
       >
-      {/* Treasures */}
-      {treasures.map((treasure) => {
-        const isSelected = selectedTreasure === treasure.id;
-        const isOther = selectedTreasure && !isSelected;
-        const isFloating = !selectedTreasure && treasure.visible; // Floating up after opening
+        {/* Treasures */}
+        {treasures.map((treasure) => {
+          const isSelected = selectedTreasure === treasure.id;
+          const isOther = selectedTreasure && !isSelected;
+          const isFloating = !selectedTreasure && treasure.visible;
 
-        return (
-          <div
-            key={treasure.id}
-            onClick={() => handleTreasureClick(treasure.id)}
-            className="absolute cursor-pointer transition-transform hover:scale-110 flex flex-col items-center"
-            style={{
-              left: isSelected ? '50vw' : (isOther ? '-100%' : `${treasure.x}%`),
-              bottom: isSelected ? 'calc(100vh - 150px)' : (isOther ? `${180 - treasure.y}px` : `${180 - treasure.y}px`),
-              transform: isSelected
-                ? 'translate(-50%, 0)'
-                : `translate(-50%, 0) translateY(${Math.sin(Date.now() / 500 + treasure.bobPhase) * 8}px)`,
-              opacity: treasure.visible ? 1 : 0,
-              // Only use CSS transition when selected/sliding away, NOT while floating
-              transition: isFloating
-                ? 'none' // No CSS transition while floating - pure JS animation
-                : 'left 0.8s cubic-bezier(0.33, 1, 0.68, 1), bottom 0.8s cubic-bezier(0.33, 1, 0.68, 1), opacity 0.3s',
-              pointerEvents: selectedTreasure ? 'none' : 'auto', // Disable clicks when in section mode
-            }}
-          >
-          <span 
-            className="text-black mb-3 whitespace-nowrap pixelify-sans"
-            style={{ 
-                fontFamily: '"Pixelify Sans", sans-serif',
-                fontSize: '22px',
-                fontWeight: 600,
-                textShadow: '2px 2px 0px rgb(255, 255, 255), -1px -1px 0px rgba(255, 255, 255, 0.8)',
-            }}
-           >
-           {treasure.label}
-           </span>
-          <canvas
-            width={treasure.width * treasure.scale}
-            height={treasure.height * treasure.scale}
-            style={{ imageRendering: 'pixelated' }}
-            ref={el => {
-              if (el) {
-                const ctx = el.getContext('2d');
-                ctx.clearRect(0, 0, el.width, el.height);
-                for (let y = 0; y < treasure.height; y++) {
-                  for (let x = 0; x < treasure.width; x++) {
-                    const pixel = treasure.sprite[y]?.[x];
-                    if (pixel && pixel > 0) {
-                      const color = treasure.palette[pixel];
-                      if (color) {
-                        ctx.fillStyle = `rgb(${color[0]}, ${color[1]}, ${color[2]})`;
-                        ctx.fillRect(x * treasure.scale, y * treasure.scale, treasure.scale, treasure.scale);
+          return (
+            <div
+              key={treasure.id}
+              onClick={() => handleTreasureClick(treasure.id)}
+              className="absolute cursor-pointer transition-transform hover:scale-110 flex flex-col items-center"
+              style={{
+                left: isSelected ? '50vw' : (isOther ? '-100%' : `${treasure.x}%`),
+                bottom: isSelected ? 'calc(100vh - 150px)' : `${180 - treasure.y}px`,
+                transform: isSelected
+                  ? 'translate(-50%, 0)'
+                  : `translate(-50%, 0) translateY(${Math.sin(Date.now() / 500 + treasure.bobPhase) * 8}px)`,
+                opacity: treasure.visible ? 1 : 0,
+                transition: isFloating
+                  ? 'none'
+                  : 'left 0.8s cubic-bezier(0.33, 1, 0.68, 1), bottom 0.8s cubic-bezier(0.33, 1, 0.68, 1), opacity 0.3s',
+                pointerEvents: selectedTreasure ? 'none' : 'auto',
+              }}
+            >
+              <span
+                className="text-black mb-3 whitespace-nowrap pixelify-sans"
+                style={{
+                  fontFamily: '"Pixelify Sans", sans-serif',
+                  fontSize: '22px',
+                  fontWeight: 600,
+                  textShadow: '2px 2px 0px rgb(255, 255, 255), -1px -1px 0px rgba(255, 255, 255, 0.8)',
+                }}
+              >
+                {treasure.label}
+              </span>
+              <canvas
+                width={treasure.width * treasure.scale}
+                height={treasure.height * treasure.scale}
+                style={{ imageRendering: 'pixelated' }}
+                ref={el => {
+                  if (el) {
+                    const ctx = el.getContext('2d');
+                    ctx.clearRect(0, 0, el.width, el.height);
+                    for (let y = 0; y < treasure.height; y++) {
+                      for (let x = 0; x < treasure.width; x++) {
+                        const pixel = treasure.sprite[y]?.[x];
+                        if (pixel && pixel > 0) {
+                          const color = treasure.palette[pixel];
+                          if (color) {
+                            ctx.fillStyle = `rgb(${color[0]}, ${color[1]}, ${color[2]})`;
+                            ctx.fillRect(x * treasure.scale, y * treasure.scale, treasure.scale, treasure.scale);
+                          }
+                        }
                       }
                     }
                   }
-                }
-              }
+                }}
+              />
+            </div>
+          );
+        })}
+
+        {/* Bubbles */}
+        {bubbles.map(bubble => (
+          <div
+            key={bubble.id}
+            className="absolute rounded-full pointer-events-none"
+            style={{
+              left: `${bubble.x}%`,
+              bottom: `${bubble.y + 80}px`,
+              width: bubble.size,
+              height: bubble.size,
+              background: `radial-gradient(circle at 30% 30%, rgba(255,255,255,${bubble.opacity}), rgba(200,230,255,${bubble.opacity * 0.5}))`,
+              border: `2px solid rgba(255,255,255,${bubble.opacity * 0.6})`,
+              transform: 'translate(-50%, 50%)',
             }}
           />
-        </div>
-        );
-      })}
-      
-      {/* Bubbles */}
-      {bubbles.map(bubble => (
-        <div
-          key={bubble.id}
-          className="absolute rounded-full pointer-events-none"
-          style={{
-            left: `${bubble.x}%`,
-            bottom: `${bubble.y + 80}px`,
-            width: bubble.size,
-            height: bubble.size,
-            background: `radial-gradient(circle at 30% 30%, rgba(255,255,255,${bubble.opacity}), rgba(200,230,255,${bubble.opacity * 0.5}))`,
-            border: `2px solid rgba(255,255,255,${bubble.opacity * 0.6})`,
-            transform: 'translate(-50%, 50%)',
-          }}
-        />
-      ))}
-      
-      {/* Chest */}
-      <canvas
-        ref={canvasRef}
-        onClick={handleChestClick}
-        className={`cursor-pointer ${!isOpen ? 'transition-transform hover:scale-105' : ''}`}
-        style={{ imageRendering: 'pixelated' }}
-      />
+        ))}
 
+        {/* Chest */}
+        <canvas
+          ref={canvasRef}
+          onClick={handleChestClick}
+          className={`cursor-pointer ${!isOpen ? 'transition-transform hover:scale-105' : ''}`}
+          style={{ imageRendering: 'pixelated' }}
+        />
       </div>
     </>
   );
