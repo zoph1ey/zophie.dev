@@ -80,7 +80,7 @@ export default function ContactsSection({ isMobile }) {
           <span>hello.nurfarahana@gmail.com</span>
         </a>
         <a
-          href="/Nurfarahana_Resume.pdf"
+          href="/resume.pdf"
           target="_blank"
           rel="noopener noreferrer"
           style={{
